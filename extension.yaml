@@ -1,0 +1,8 @@
+Name: Is There Any Deal
+Author: Blake Burkhart
+Version: 1.0
+Module: IsThereAnyDeal.ps1
+Type: Script
+Functions: 
+    - Description: Add Selected Games to Is There Any Deal Collection
+      FunctionName: IsThereAnyDeal
