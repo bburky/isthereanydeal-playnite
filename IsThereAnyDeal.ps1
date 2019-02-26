@@ -9,14 +9,11 @@ function ConvertGamesToITAD ($allGames) {
             playtime = $playtime / 60
             copies = @(foreach ($game in $games) {
                 @{
-                    type = if ($game.Source -eq "Battle.net") {
-                        "Blizzard"
-                    }
-                    elseif ($game.Source) {
-                        $game.Source
-                    }
-                    else {
-                        "Playnite"
+                    type = switch ($game.Source) {
+                        "Battle.net" { "battlenet" }
+                        "itch.io" { "itchio" }
+                        { !$_ } { "playnite" }
+                        Default { $_.ToLower() }
                     }
                     owned = 1
                 }
