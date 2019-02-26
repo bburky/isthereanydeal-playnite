@@ -1,5 +1,11 @@
 # Is There Any Deal Collection Sync Playnite Extension
 
+## Installation
+
+See [Installing Scripts and Plugins](https://github.com/JosefNemec/Playnite/wiki/Installing-scripts-and-plugins).
+
+## Usage
+
 1. Select games to add to your Is There Any Deal collection.
 2. Click Extensions" → "Add Selected Games to Is There Any Deal Collection" in the menu.
 3. Log into Is There Any Deal if it prompts you to. Close the window and rerun the extension after logging in.
