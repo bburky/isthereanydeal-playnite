@@ -13,7 +13,7 @@ function ConvertGamesToITAD ($allGames) {
                         "Battle.net" { "battlenet" }
                         "itch.io" { "itchio" }
                         { !$_ } { "playnite" }
-                        Default { $_.ToLower() }
+                        Default { $_.Name.ToLower() }
                     }
                     owned = 1
                 }
