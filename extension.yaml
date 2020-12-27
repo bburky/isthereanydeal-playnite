@@ -1,8 +1,9 @@
+Id: bburky-IsThereAnyDeal
 Name: Is There Any Deal
 Author: Blake Burkhart
-Version: 1.2
+Version: 1.3
 Module: IsThereAnyDeal.ps1
 Type: Script
-Functions: 
+Functions:
     - Description: Add Selected Games to Is There Any Deal Collection
       FunctionName: IsThereAnyDeal
