@@ -38,8 +38,18 @@ function ImportGamesInITAD ($games) {
     </body>"
 
     $webView = $PlayniteApi.WebViews.CreateView(1000, 800)
+    foreach ($cookie in $webView.GetCookies()) {
+        if ($cookie.Domain -match "\.?isthereanydeal\.com" -and $cookie.Name -eq "user") {
+            # Chrome 80+ now enforces SameSite cookies which breaks this ITAD API
+            # HACK: Abuse Chrome's 2 minute timer from its "Lax + POST mitigation" https://www.chromium.org/updates/same-site/faq
+            # Delete and recreate the "user" cookie to reset its creation date
+            $webView.DeleteCookies("https://isthereanydeal.com/", "user")
+            $webView.SetCookies("https://isthereanydeal.com/", $cookie.Domain, $cookie.Name, $cookie.Value, $cookie.Path, $cookie.Expires)
+        }
+    }
     $webView.Navigate("data:text/html," + $html)
     $webView.OpenDialog()
+    $webView.Dispose()
 }
 
 function IsThereAnyDeal {
