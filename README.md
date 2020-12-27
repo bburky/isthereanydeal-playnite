@@ -2,7 +2,7 @@
 
 ## Installation
 
-See [Installing Scripts and Plugins](https://github.com/JosefNemec/Playnite/wiki/Installing-scripts-and-plugins).
+[Download extension .pext from the forum post](https://playnite.link/forum/thread-270-post-753.html)
 
 ## Usage
 
