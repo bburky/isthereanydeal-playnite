@@ -53,5 +53,17 @@ function ImportGamesInITAD ($games) {
 }
 
 function IsThereAnyDeal {
-    ImportGamesInITAD $PlayniteApi.MainView.SelectedGames
+    param($scriptGameMenuItemActionArgs)
+
+    ImportGamesInITAD $scriptGameMenuItemActionArgs.Games
+}
+
+function GetGameMenuItems()
+{
+    param($getGameMenuItemsArgs)
+
+    $menuItem = New-Object Playnite.SDK.Plugins.ScriptGameMenuItem
+    $menuItem.Description = "Add to Is There Any Deal Collection"
+    $menuItem.FunctionName = "IsThereAnyDeal"
+    return $menuItem
 }

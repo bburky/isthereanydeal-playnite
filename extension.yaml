@@ -1,9 +1,11 @@
 Id: bburky-IsThereAnyDeal
 Name: Is There Any Deal
 Author: Blake Burkhart
-Version: 1.3
-Module: IsThereAnyDeal.ps1
+Version: 1.4
+Module: IsThereAnyDeal.psm1
 Type: Script
-Functions:
-    - Description: Add Selected Games to Is There Any Deal Collection
-      FunctionName: IsThereAnyDeal
+Links:
+    - Name: Forum
+      Url: https://playnite.link/forum/thread-270.html
+    - Name: Source Code
+      Url: https://gist.github.com/bburky/38c29a5fd8fbf2fc72ef77d553d09c6a
