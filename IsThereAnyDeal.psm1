@@ -1,11 +1,11 @@
 function ConvertGamesToITAD ($allGames) {
     foreach ($group in $allGames | Group-Object -Property Name) {
         $games = $group.Group
-        $playtime = ($games.Playtime | Sort-Object)[-1]
-        $status = ($games.CompletionStatus | Sort-Object)[-1]
+        $playtime = $games.Playtime | Sort-Object | Select-Object -Last 1
+        $status = $games.CompletionStatus | Sort-Object | Select-Object -Last 1
         @{
             title = $games[0].Name
-            status = ([string]$status).ToLower()
+            status = if ($status) {([string]$status).ToLower()} else {$null}
             playtime = $playtime / 60
             copies = @(foreach ($game in $games) {
                 @{
