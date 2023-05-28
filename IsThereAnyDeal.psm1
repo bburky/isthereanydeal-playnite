@@ -5,12 +5,19 @@ function ConvertGamesToITAD ($allGames) {
         $status = $games.CompletionStatus | Sort-Object | Select-Object -Last 1
         @{
             title = $games[0].Name
-            status = if ($status) {([string]$status).ToLower()} else {$null}
-            playtime = $playtime / 60
+            # status = if ($status) {([string]$status).ToLower()} else {$null}
+            status = ""	# don't track status on ITAD
+            # playtime = $playtime / 60
+            playtime = ""	# don't track play time on ITAD
             copies = @(foreach ($game in $games) {
                 @{
                     type = switch ($game.Source) {
-                        "Battle.net" { "battlenet" }
+						# New mappings to match Playnite libraries with ITAD stores
+                        "EA App" { "Origin" }
+                        "Epic" { "Epic Game Store" }
+                        "Ubisoft Connect" { "Ubisoft Store" }
+
+						"Battle.net" { "battlenet" }
                         "itch.io" { "itchio" }
                         { !$_ } { "playnite" }
                         Default { $_.Name.ToLower() }
