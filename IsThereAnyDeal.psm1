@@ -1,6 +1,9 @@
 function ConvertGamesToITAD ($allGames) {
     foreach ($group in $allGames | Group-Object -Property Name) {
         $games = $group.Group
+        if ((-not $games) -or (-not $games[0].Name)) {
+            continue
+        }
         $playtime = $games.Playtime | Sort-Object | Select-Object -Last 1
         $status = $games.CompletionStatus | Sort-Object | Select-Object -Last 1
         @{
