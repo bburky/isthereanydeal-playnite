@@ -47,12 +47,12 @@ namespace IsthereanydealCollectionSync
                                 var client = new IsthereanydealClient(this, view);
                                 if (!await client.GetIsUserLoggedIn())
                                 {
-                                    PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in add-ons extension settings", "IsThereAnyDeal Collection Sync");
+                                    PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in \"Add-ons...\" settings", "IsThereAnyDeal Collection Sync");
                                     return;
                                 }
                                 var json = await client.generateImportJson(settings.Settings.ImportGroup, itemArgs.Games);
                                 var result = await client.Import(json, settings.Settings.ImportModeReplace, settings.Settings.RemoveFromWaitlist);
-                                PlayniteApi.Dialogs.ShowMessage(result, "IsThereAnyDeal Collection Sync");
+                                PlayniteApi.Dialogs.ShowMessage($"Sent {itemArgs.Games.Count} games to IsThereAnyDeal\n\nIsThereAnyDeal response:\n{result}\n\n\"added\" will be reduced if games are already in collection\n\"copies imported\" will be reduced if \"ignore games already in collection\" setting is used", "IsThereAnyDeal Collection Sync");
                             }
                         }
                         catch (Exception ex)

@@ -12,28 +12,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Setup NuGet.exe
-        uses: nuget/setup-nuget@v1
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
 
       - name: Restore NuGet Packages
         run: nuget restore IsthereanydealCollectionSync.sln
 
-      - name: Build and Publish
+      - name: Build
         run: |
           msbuild IsthereanydealCollectionSync.sln /p:Configuration=Release
           $version = ($env:GITHUB_REF -Split "/")[-1]
           echo "VERSION=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Setup Playnite
+      - name: Download Playnite
         run: |
           mkdir playnite
           Invoke-WebRequest -Uri "https://github.com/JosefNemec/Playnite/releases/download/10.33/Playnite1033.zip" -OutFile "playnite\Playnite1033.zip"
           Expand-Archive "playnite\Playnite1033.zip" -DestinationPath "playnite"
 
-      - name: Package release
+      - name: Package release with Playnite toolbox
         run: |
           Copy-Item LICENSE bin\release
           mkdir release
@@ -43,7 +43,7 @@ jobs:
 
       - name: Upload Release Asset
         id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v1 # TODO: deprecated, replace action
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

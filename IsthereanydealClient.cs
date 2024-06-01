@@ -58,10 +58,6 @@ namespace IsthereanydealCollectionSync
         async public Task<string> Import(string importJson, bool importModeReplace, bool removeFromWaitlist)
         {
             webView.NavigateAndWait("https://isthereanydeal.com/collection/import/");
-            if (!webView.GetPageText().Contains("Click or drag'n'drop a file here"))
-            {
-                throw new Exception("Unexpected invalid import page text");
-            }
 
             var mode = importModeReplace ? "replace" : "ignore";
             var waitlist = removeFromWaitlist ? "true" : "false";
@@ -153,6 +149,7 @@ namespace IsthereanydealCollectionSync
                 return new ImportJSONGameCopy
                 {
                     note = "Playnite",
+                    redeemed = true,
                 };
             }
 
@@ -207,12 +204,14 @@ namespace IsthereanydealCollectionSync
                 return new ImportJSONGameCopy
                 {
                     shop = id,
+                    redeemed = true,
                 };
             }
 
             return new ImportJSONGameCopy
             {
                 note = source,
+                redeemed = true,
             };
         }
 
@@ -246,6 +245,8 @@ namespace IsthereanydealCollectionSync
             public string note;
 
             public int? added;
+
+            public bool redeemed;
         }
 
         public class ShopsJSON
