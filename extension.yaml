@@ -1,11 +1,10 @@
-Id: bburky-IsThereAnyDeal
-Name: Is There Any Deal
+﻿Id: bburky-IsThereAnyDeal
+Name: IsThereAnyDeal Collection Sync
 Author: Blake Burkhart
-Version: 1.4.1
-Module: IsThereAnyDeal.psm1
-Type: Script
+Version: 2.0
+Module: IsthereanydealCollectionSync.dll
+Type: GenericPlugin
+Icon: icon.svg
 Links:
-    - Name: Forum
-      Url: https://playnite.link/forum/thread-270.html
-    - Name: GitHub
+    - Name: Source
       Url: https://github.com/bburky/isthereanydeal-playnite/
