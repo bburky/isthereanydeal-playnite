@@ -1,9 +1,11 @@
 AddonId: bburky-IsThereAnyDeal
 Packages:
-  - Version: 1.4
-    RequiredApiVersion: 6.0.0
-    ReleaseDate: 2021-09-28
-    PackageUrl: https://github.com/bburky/isthereanydeal-playnite/releases/download/v1.4/bburky-IsThereAnyDeal-v1.4.pext
+  - Version: 2.1
+    RequiredApiVersion: 6.4.0
+    ReleaseDate: 2024-06-01
+    PackageUrl: https://github.com/bburky/isthereanydeal-playnite/releases/download/v2.1/IsthereanydealCollectionSync-v2.1.pext
     Changelog:
-      - "Update to Playnite 9"
-      - "Move menu option to right click game menu"
+      - "Updated to support IsThereAnyDeal's site redesign
+      - "Extension entirely rewritten, now in C#"
+      - 'Configurable import settings in "Add-ons..." settings'
+      - "Better handling of IsThereAnyDeal login, login is now done in settings"
