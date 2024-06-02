@@ -1,7 +1,5 @@
 # IsThereAnyDeal Collection Sync Playnite Extension
 
-
-* [Install](playnite://playnite/installaddon/bburky-IsThereAnyDeal) (requires Playnite to be installed)
 * [Playnite addon details](https://playnite.link/addons.html#bburky-IsThereAnyDeal)
 * [Download extension from GitHub Releases](https://github.com/bburky/playnite-playlist/releases)
 
