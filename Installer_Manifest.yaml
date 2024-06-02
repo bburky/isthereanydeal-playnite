@@ -1,7 +1,7 @@
 AddonId: bburky-IsThereAnyDeal
 Packages:
   - Version: 2.1
-    RequiredApiVersion: 6.4.0
+    RequiredApiVersion: 6.11.0
     ReleaseDate: 2024-06-01
     PackageUrl: https://github.com/bburky/isthereanydeal-playnite/releases/download/v2.1/IsthereanydealCollectionSync-v2.1.pext
     Changelog:
