@@ -31,14 +31,24 @@ namespace IsthereanydealCollectionSync
         async public Task<bool> GetIsUserLoggedIn()
         {
             webView.NavigateAndWait(@"https://isthereanydeal.com/collection/import/");
-            // The page isn't loaded immediately, you have to wait for JS to finish to be able to read webView.GetPageText()
-            // However, there is some global JS variables populated from a <script> tag that can be read immediately
-            var result = await webView.EvaluateScriptAsync("window?.g?.user?.isLoggedIn === true");            
-            if (!result.Success)
+            // The page isn't loaded immediately, you have to wait for JS to finish to be able to read webView.GetPageText() get valid content.
+            // However, there is some global JS variables populated from a <script> tag that can be read immediately... but it can run too early still.
+            // Instead check if the value is null, and sleep for 100ms and retry (up to 5sec total).
+            // If the ITAD HTML source ever changes this may also get stuck in the loop and error with "Could not detect ITAD login status." eventually.
+            for (int i = 0; i < 50; i++)
             {
-                throw new Exception($"Failed to import IsThereAnyDeal Collection: {result.Message}");
+                var result = await webView.EvaluateScriptAsync("window?.g?.user?.isLoggedIn");
+                if (!result.Success)
+                {
+                    throw new Exception($"Failed to import IsThereAnyDeal Collection: {result.Message}");
+                }
+                if (result.Result != null)
+                {
+                    return (bool)result.Result;
+                }
+                await Task.Delay(100);
             }
-            return (bool)result.Result;
+            throw new Exception($"Could not detect ITAD login status.");
         }
 
         public void Login()
@@ -154,6 +164,7 @@ namespace IsthereanydealCollectionSync
             }
 
             // Normalize the source to match the ITAD shop names
+            // All ITAD shops with a corresponding Playnite library addon are below, some names match so there is no change.
             if (source == "Amazon" || source == "Amazon Games" )
             {
                 source = "Amazon";
@@ -197,6 +208,10 @@ namespace IsthereanydealCollectionSync
             else if (source == "Xbox") // TODO is this still accurate?
             {
                 source = "Microsoft Store";
+            }
+            else if (source == "Fanatical")
+            {
+                source = "Fanatical";
             }
 
             if (shops.TryGetValue(source, out var id))
