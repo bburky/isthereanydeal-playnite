@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using System.Windows.Media.Animation;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
@@ -28,37 +29,46 @@ namespace IsthereanydealCollectionSync
             this.webView = webView;
         }
 
-        async public Task<bool> GetIsUserLoggedIn()
+        async public Task<bool> GetIsUserLoggedIn(bool skipNavigate = false)
         {
-            webView.NavigateAndWait(@"https://isthereanydeal.com/collection/import/");
-            // The page isn't loaded immediately, you have to wait for JS to finish to be able to read webView.GetPageText() get valid content.
-            // However, there is some global JS variables populated from a <script> tag that can be read immediately... but it can run too early still.
-            // Instead check if the value is null, and sleep for 100ms and retry (up to 5sec total).
-            // If the ITAD HTML source ever changes this may also get stuck in the loop and error with "Could not detect ITAD login status." eventually.
-            for (int i = 0; i < 50; i++)
+            if (!skipNavigate)
             {
-                var result = await webView.EvaluateScriptAsync("window?.g?.user?.isLoggedIn");
-                if (!result.Success)
-                {
-                    throw new Exception($"Failed to import IsThereAnyDeal Collection: {result.Message}");
-                }
-                if (result.Result != null)
-                {
-                    return (bool)result.Result;
-                }
-                await Task.Delay(100);
+                webView.NavigateAndWait(@"https://isthereanydeal.com/collection/import/");
             }
-            throw new Exception($"Could not detect ITAD login status.");
+            // The page isn't loaded immediately, you have to wait for JS to finish to be able to read webView.GetPageText() get valid content.
+            // However, there is some global JS variables populated from a <script> tag that can be read immediately.
+            var result = await webView.EvaluateScriptAsync("window?.g?.user?.isLoggedIn");
+            if (!result.Success)
+            {
+                throw new ITADException($"Failed to import IsThereAnyDeal Collection: {result.Message}");
+            }
+            if (result.Result != null)
+            {
+                return (bool)result.Result;
+            }
+            throw new ITADException($"Could not detect ITAD login status.");
         }
 
         public void Login()
         {
             webView.DeleteDomainCookies("isthereanydeal.com");
-            webView.LoadingChanged += (s, e) =>
+            webView.LoadingChanged += async (s, e) =>
             {
-                if (new []{ "https://isthereanydeal.com/collection/import/", "https://isthereanydeal.com/collection/import/#" }.Contains(webView.GetCurrentAddress()))
+                if (e.IsLoading == false && webView.GetCurrentAddress().StartsWith("https://isthereanydeal.com/"))
                 {
-                    webView.Close();
+                    // This runs asynchronously which isn't really safe and may race. Worst case it may run on the wrong domain even.
+                    // However if we ignore errors (they'll be checked elsewhere when validating login) it should work out, other sites won't have the JS object and will return false or null.
+                    try
+                    {
+                        if (await GetIsUserLoggedIn(true))
+                        {
+                            webView.Close();
+                        }
+                    }
+                    catch (ITADException)
+                    {
+                        // Ignore ITADException during navigation
+                    }
                 }
             };
             webView.Navigate("https://isthereanydeal.com/collection/import/#/user:login");
@@ -236,6 +246,7 @@ namespace IsthereanydealCollectionSync
 
             public List<ImportJSONData> data;
         }
+
         public class ImportJSONData
         {
             public string group;
@@ -245,6 +256,7 @@ namespace IsthereanydealCollectionSync
             [SerializationPropertyName("public")]
             public bool public_;
         }
+
         public class ImportJSONGame
         {
             public string id;
@@ -253,6 +265,7 @@ namespace IsthereanydealCollectionSync
 
             public List<ImportJSONGameCopy> copies;
         }
+
         public class ImportJSONGameCopy
         {
             public int? shop;
@@ -269,6 +282,11 @@ namespace IsthereanydealCollectionSync
             public int id;
 
             public string title;
+        }
+
+        public class ITADException : Exception
+        {
+            public ITADException(string message) : base(message) { }
         }
     }
 }
