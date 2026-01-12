@@ -12,49 +12,44 @@
         <sys:Boolean x:Key="True">True</sys:Boolean>
         <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
-    <StackPanel>
+    <StackPanel Margin="30,0,30,0" VerticalAlignment="Stretch">
+        <StackPanel.Resources>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,5,5,5" />
+            </Style>
+            <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+                <Setter Property="Margin" Value="0,5,0,5" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                <Setter Property="Margin" Value="0,5,0,5" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </StackPanel.Resources>
         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
             <Button Content="Authenticate" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="0,5,5,5"/>
-            <TextBlock VerticalAlignment="Center" Margin="10,5,5,5">
-                <TextBlock.Tag>
-                    <PriorityBinding>
-                        <Binding Path="IsUserLoggedIn" IsAsync="True" />
-                        <Binding Source="{x:Null}" />
-                    </PriorityBinding>
-                </TextBlock.Tag>
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
-                        <Style.Triggers>
-                            <Trigger Property="Tag" Value="{StaticResource True}">
-                                <Setter Property="Text" Value="Logged In" />
-                            </Trigger>
-                            <Trigger Property="Tag" Value="{StaticResource False}">
-                                <Setter Property="Text" Value="Not Logged In" />
-                            </Trigger>
-                            <Trigger Property="Tag" Value="{x:Null}">
-                                <Setter Property="Text" Value="Checking..." />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
+            <TextBlock Margin="10,5,5,5" Text="{Binding AuthenticationStatus, IsAsync=True}" />
+        </StackPanel>
+        <TextBlock Text="Import Category"/>
+        <StackPanel Orientation="Horizontal">
+            <RadioButton Content="Create new category:" />
+            <TextBox Text="{Binding Settings.ImportGroup}" Width="120" VerticalAlignment="Center" Margin="12,0,0,0"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-            <TextBlock Text="Imported collection group name:  "/>
-            <TextBox Text="{Binding Settings.ImportGroup}" Width="200"></TextBox>
+            <RadioButton Content="Use existing:" />
+            <ComboBox ItemsSource="{Binding Categories}" 
+                      IsReadOnly="True"
+                      IsEditable="False"
+                      SelectedIndex="0"
+                      DisplayMemberPath="title"
+                      SelectedValuePath="id"
+                      SelectedValue="{Binding SelectedCategoryId}"/>
         </StackPanel>
-        <TextBlock Text="Only applies to newly imported games"/>
-        <TextBlock Text=""/>
-        <TextBlock Text="The following settings correspond to those at https://isthereanydeal.com/collection/import/"/>
-        <TextBlock Text=""/>
-        <TextBlock Text="Games already in Collection"/>
-        <RadioButton Content="Ignore" IsChecked="{Binding Settings.ImportModeReplace, Converter={StaticResource BoolInverterConverter_ValueConverter}}" />
-        <RadioButton Content="Replace games and all their copies" IsChecked="{Binding Settings.ImportModeReplace}" />
-        <TextBlock Text=""/>
-        <TextBlock Text="Waitlist"/>
-        <StackPanel Orientation="Horizontal">
-            <CheckBox IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
-            <TextBlock Text="Remove imported games from Waitlist"/>
-        </StackPanel>
+        <TextBlock Text="Games already in Collection" Margin="0,20,0,0"/>
+        <RadioButton Content="Ignore" IsChecked="{Binding Settings.ImportModeReplace, Converter={StaticResource BoolInverterConverter_ValueConverter}}"/>
+        <RadioButton Content="Replace games and all their copies" IsChecked="{Binding Settings.ImportModeReplace}"/>
+        <CheckBox Content="Remove imported games from Waitlist" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
+        <TextBlock Text="{Binding PluginPath}" />
     </StackPanel>
 </UserControl>
