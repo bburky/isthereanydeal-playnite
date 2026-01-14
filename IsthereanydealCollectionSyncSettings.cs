@@ -2,12 +2,8 @@
 using Playnite.SDK.Data;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 using System.Windows.Data;
-using System.Windows.Markup;
 
 namespace IsthereanydealCollectionSync
 {
@@ -15,16 +11,24 @@ namespace IsthereanydealCollectionSync
     {
         private bool importModeReplace = false; // true replace, false ignore
         private bool removeFromWaitlist = false;
-        private string importGroup = "Playnite";
         public bool ImportModeReplace { get => importModeReplace; set => SetValue(ref importModeReplace, value); }
+        public ItadApiCredential credential;
         public bool RemoveFromWaitlist { get => removeFromWaitlist; set => SetValue(ref removeFromWaitlist, value); }
-        public string ImportGroup { get => importGroup; set => SetValue(ref importGroup, value); }
+        public int SelectedCategoryId { get; set; } = 0;
     }
 
     public class IsthereanydealCollectionSyncSettingsViewModel : ObservableObject, ISettings
     {
         private readonly IsthereanydealCollectionSync plugin;
         private IsthereanydealCollectionSyncSettings editingClone { get; set; }
+
+        public ObservableCollection<ItadApiCategory> Categories
+        {
+            get; 
+            private set;
+        } = new ObservableCollection<ItadApiCategory>();
+
+        private static object _lock = new object();
 
         private IsthereanydealCollectionSyncSettings settings;
         public IsthereanydealCollectionSyncSettings Settings
@@ -49,32 +53,45 @@ namespace IsthereanydealCollectionSync
             {
                 Settings = new IsthereanydealCollectionSyncSettings();
             }
+
+            BindingOperations.EnableCollectionSynchronization(Categories, _lock);
         }
 
-        public bool IsUserLoggedIn
+        public string PluginPath => plugin.GetPluginUserDataPath();
+
+        public string AuthenticationStatus
         {
-            get
-            {
-                using (var view = plugin.PlayniteApi.WebViews.CreateOffscreenView())
+            get {
+                if (!plugin.client.IsUserLoggedIn())
                 {
-                    var client = new IsthereanydealClient(plugin, view);
-                    return client.GetIsUserLoggedIn().GetAwaiter().GetResult();
+                    return "Not logged in";
+                }
+                else
+                {
+                    return $"Hello {plugin.client.Username}!";
                 }
             }
         }
+
         public RelayCommand<object> LoginCommand
         {
             get => new RelayCommand<object>((a) =>
             {
-                using (var view = plugin.PlayniteApi.WebViews.CreateView(600, 800))
-                {
-                    var client = new IsthereanydealClient(plugin, view);
-                    client.Login();
-                }
-
-                OnPropertyChanged(nameof(IsUserLoggedIn));
+                plugin.client.Login();
             });
         }
+
+        public void OnModelChanged(object sender, EventArgs args) {
+            Categories.Clear();
+
+            foreach (var cat in plugin.client.Categories)
+            {
+                Categories.Add(cat);
+            }
+
+            OnPropertyChanged(nameof(AuthenticationStatus));
+        }
+
         public void BeginEdit()
         {
             editingClone = Serialization.GetClone(Settings);
@@ -87,6 +104,7 @@ namespace IsthereanydealCollectionSync
 
         public void EndEdit()
         {
+            Settings.credential = plugin.client.Api.Credential;
             plugin.SavePluginSettings(Settings);
         }
 

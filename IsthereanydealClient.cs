@@ -1,288 +1,271 @@
-﻿using System;
+﻿using Playnite.SDK;
+using Playnite.SDK.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Documents;
-using System.Windows.Media.Animation;
-using Playnite.SDK;
-using Playnite.SDK.Data;
-using Playnite.SDK.Models;
-using Playnite.SDK.Plugins;
 
 namespace IsthereanydealCollectionSync
 {
     public class IsthereanydealClient
     {
-        private ILogger logger = LogManager.GetLogger();
-        private IsthereanydealCollectionSync plugin;
-        private IWebView webView;
+        private static readonly ILogger logger = LogManager.GetLogger();
+        private readonly IsthereanydealCollectionSync plugin;
+        public ItadApi Api { get; private set; }
+        internal string Username { get; private set; }
+        internal ItadApiCategory[] Categories { get; private set; }
+        public event EventHandler InfoUpdate;
+        private readonly IsthereanydealCollectionSyncSettings settings;
 
-        public static Dictionary<string, int> shops;
-        private static Dictionary<Guid, string> pluginNames;
-
-        public IsthereanydealClient(IsthereanydealCollectionSync plugin, IWebView webView)
+        public IsthereanydealClient(IsthereanydealCollectionSync plugin, IsthereanydealCollectionSyncSettingsViewModel settings)
         {
             this.plugin = plugin;
-            this.webView = webView;
+            InfoUpdate += settings.OnModelChanged;
+            Api = new ItadApi(settings.Settings.credential);
+            this.settings = settings.Settings;
+
+            Task.WhenAll(
+                InitUsername(), InitCategories()
+            ).ContinueWith((task) =>
+            {
+                if (!(task.Exception is null))
+                {
+                    InfoUpdate?.Invoke(this, EventArgs.Empty);
+                }
+            });
         }
 
-        async public Task<bool> GetIsUserLoggedIn(bool skipNavigate = false)
+        private async Task InitUsername()
         {
-            if (!skipNavigate)
+            try
             {
-                webView.NavigateAndWait(@"https://isthereanydeal.com/collection/import/");
+                Username = await Api.GetUsername();
+                logger.Info($"Logged in as {Username}");
             }
-            // The page isn't loaded immediately, you have to wait for JS to finish to be able to read webView.GetPageText() get valid content.
-            // However, there is some global JS variables populated from a <script> tag that can be read immediately.
-            var result = await webView.EvaluateScriptAsync("window?.g?.user?.isLoggedIn");
-            if (!result.Success)
+            catch (ITADException err)
             {
-                throw new ITADException($"Failed to import IsThereAnyDeal Collection: {result.Message}");
+                LogInitError("username", err);
             }
-            if (result.Result != null)
+        }
+
+        private async Task InitCategories()
+        {
+            try
             {
-                return (bool)result.Result;
+                Categories = await Api.GetCategories();
+                logger.Info($"Found {Categories.Count()} categories");
             }
-            throw new ITADException($"Could not detect ITAD login status.");
+            catch (ITADException err)
+            {
+                LogInitError("categories", err);
+            }
+        }
+
+        private void LogInitError(string field, ITADException err)
+        {
+            logger.Error(err, $"Failed to get {field}. User need to restart Code exchange.");
+        }
+
+        public bool IsUserLoggedIn()
+        {
+            return !(Username is null);
         }
 
         public void Login()
         {
-            webView.DeleteDomainCookies("isthereanydeal.com");
-            webView.LoadingChanged += async (s, e) =>
+            var oauth = new OauthCodeExchange();
+            using (var webView = plugin.playniteApi.WebViews.CreateView(500, 700))
             {
-                if (e.IsLoading == false && webView.GetCurrentAddress().StartsWith("https://isthereanydeal.com/"))
+                webView.LoadingChanged += async (s, e) =>
                 {
-                    // This runs asynchronously which isn't really safe and may race. Worst case it may run on the wrong domain even.
-                    // However if we ignore errors (they'll be checked elsewhere when validating login) it should work out, other sites won't have the JS object and will return false or null.
+                    string address = webView.GetCurrentAddress();
+
                     try
                     {
-                        if (await GetIsUserLoggedIn(true))
+                        if (oauth.TryInitCode(address))
                         {
+                            Api = await oauth.GetTokens();
+                            Username = await Api.GetUsername();
+                            Categories = await Api.GetCategories();
+                            InfoUpdate?.Invoke(this, EventArgs.Empty);
                             webView.Close();
                         }
                     }
-                    catch (ITADException)
+                    catch (ITADException err)
                     {
-                        // Ignore ITADException during navigation
+                        webView.Close();
+                        plugin.PlayniteApi.Dialogs.ShowErrorMessage($"An error occured during authentication:\n{err.Message}", "Failed to authenticate IsThereAnyDeal");
+                        logger.Error(err, $"An error occured during authentication:\n{err.Message}");
                     }
-                }
-            };
-            webView.Navigate("https://isthereanydeal.com/collection/import/#/user:login");
-            webView.OpenDialog();
-        }
+                };
 
-        async public Task<string> Import(string importJson, bool importModeReplace, bool removeFromWaitlist)
-        {
-            webView.NavigateAndWait("https://isthereanydeal.com/collection/import/");
-
-            var mode = importModeReplace ? "replace" : "ignore";
-            var waitlist = removeFromWaitlist ? "true" : "false";
-            var b64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(importJson));
-            var script = @"
-            (async (b64, mode, waitlist) => {
-                const formData = new FormData();
-                formData.append('file', `data:application/json;base64,${b64}`);
-                formData.append('mode', mode);
-                if (waitlist) {
-                    formData.append('wait_remove', 1);
-                }
-                const response = await fetch('https://isthereanydeal.com/collection/import/', {
-                    'headers': {
-                        'accept': 'application/json',
-                        'itad-sessiontoken': g.user.token,
-                    },
-                    'body': formData,
-                    'method': 'POST',
-                    'mode': 'cors',
-                    'credentials': 'include',
-                });
-                return await response.text();
-            })" + $"('{b64}', '{mode}', {waitlist})";
-            var result = await webView.EvaluateScriptAsync(script);
-            if (!result.Success)
-            {
-                throw new Exception($"Failed to import IsThereAnyDeal Collection: {result.Message}");
+                webView.Navigate(oauth.LoginUrl);
+                webView.OpenDialog();
             }
-            return result.Result.ToString();
         }
 
-        async public Task<string> generateImportJson(string importGroup, List<Game> games)
+        async public Task Import(List<Game> games)
         {
-            var import = new ImportJSON
+            var lookUpTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
+            var gamesGroupedByShop = games
+                .Select(game => new { 
+                    game.Name, 
+                    Source = ItadShopExtension.FromGameSource(game.Source) 
+                })
+                .GroupBy(game => game.Source, game => game.Name);
+
+            foreach (var shop_games in gamesGroupedByShop)
             {
-                version = "03",
-                data = new List<ImportJSONData>
+                System.Diagnostics.Debug.WriteLine($"({shop_games.Key}, {shop_games.Count()})");
+
+                foreach (var game in shop_games)
                 {
-                    new ImportJSONData
+                    System.Diagnostics.Debug.WriteLine($"{game}");
+                }
+
+                System.Diagnostics.Debug.WriteLine("");
+            }
+
+            Dictionary<string, string> gameIds = await lookUpTask;
+
+            var tasks = new List<Task>();
+
+            foreach (var shopGames in gamesGroupedByShop)
+            {
+                ItadShop shop = shopGames.Key;
+
+                var itadCopies = shopGames.Select(gameId =>
                     {
-                        group = importGroup,
-                        public_ = false,
-                        games = await Task.WhenAll(games.Select(async game => new ImportJSONGame
+                        if (gameIds.TryGetValue(gameId, out string gameItadId))
+                        {
+                            return new
                             {
-                                title = game.Name,
-                                copies = new List<ImportJSONGameCopy>
-                                {
-                                    await getCopyForGame(game),
-                                }
-                                // TODO: could look up game by steam app id, but this requires API authentication
-                            }
-                        )),
-                    }
+                                Copy = new ItadApiCopyInput(gameItadId, false, shop),
+                                Id = gameItadId
+                            };
+                        }
+
+                        return null;
+                    })
+                    .Where(copy => !(copy is null))
+                    .ToArray();
+
+                var addCopiesTask = Api.AddCopies(itadCopies.Select(copy => copy.Copy).ToArray());
+
+                if (settings.RemoveFromWaitlist)
+                {
+                    addCopiesTask = addCopiesTask.ContinueWith(async (task) => {
+                        await Api.DeleteFromWaitList(itadCopies.Select(copy => copy.Id).ToArray());
+                      });
                 }
-            };
-            var json = Serialization.ToJson(import);
-            return json;
+
+                tasks.Add(addCopiesTask);
+            }
+
+            await Task.WhenAll(tasks);
         }
 
-        async public Task<ImportJSONGameCopy> getCopyForGame(Game game)
-        {
-            if (shops == null)
-            {
-                using (var client = new HttpClient())
-                {
-                    var currentShops = await client.GetStringAsync("https://api.isthereanydeal.com/service/shops/v1");
-                    shops = Serialization.FromJson<List<ShopsJSON>>(currentShops).ToDictionary(s => s.title, s => s.id);
-                }
-            }
-            if (pluginNames == null)
-            {
-                pluginNames = plugin.PlayniteApi.Addons.Plugins.OfType<LibraryPlugin>().ToDictionary(p => p.Id, p => p.Name);
-            }
+        //async public Task<ImportJSONGameCopy> getCopyForGame(Game game)
+        //{
+        //    if (shops == null)
+        //    {
+        //        using (var client = new HttpClient())
+        //        {
+        //            var currentShops = await client.GetStringAsync("https://api.isthereanydeal.com/service/shops/v1");
+        //            shops = Serialization.FromJson<List<ShopsJSON>>(currentShops).ToDictionary(s => s.title, s => s.id);
+        //        }
+        //    }
+        //    if (pluginNames == null)
+        //    {
+        //        pluginNames = plugin.PlayniteApi.Addons.Plugins.OfType<LibraryPlugin>().ToDictionary(p => p.Id, p => p.Name);
+        //    }
 
-            string source = game.Source?.Name;
-            if (source == null)
-            {
-                // Fall back to the plugin name if the source is missing
-                // Some older library plugins may have failed to set the source and this old data may still be in the library
-                if (!pluginNames.TryGetValue(game.PluginId, out source))
-                {
-                    source = null;
-                }
-            }
-            if (source == null)
-            {
-                // Manually added games have neither source nor plugin info. No info to put into the ITAD copies data.
-                return new ImportJSONGameCopy
-                {
-                    note = "Playnite",
-                    redeemed = true,
-                };
-            }
+        //    string source = game.Source?.Name;
+        //    if (source == null)
+        //    {
+        //        // Fall back to the plugin name if the source is missing
+        //        // Some older library plugins may have failed to set the source and this old data may still be in the library
+        //        if (!pluginNames.TryGetValue(game.PluginId, out source))
+        //        {
+        //            source = null;
+        //        }
+        //    }
+        //    if (source == null)
+        //    {
+        //        // Manually added games have neither source nor plugin info. No info to put into the ITAD copies data.
+        //        return new ImportJSONGameCopy
+        //        {
+        //            note = "Playnite",
+        //            redeemed = true,
+        //        };
+        //    }
 
-            // Normalize the source to match the ITAD shop names
-            // All ITAD shops with a corresponding Playnite library addon are below, some names match so there is no change.
-            if (source == "Amazon" || source == "Amazon Games" )
-            {
-                source = "Amazon";
-            }
-            else if (source == "Battle.net")
-            {
-                source = "Blizzard";
-            }
-            else if (source == "EA app" || source == "Origin")
-            {
-                source = "EA Store";
-            }
-            else if (source == "Epic")
-            {
-                source = "Epic Game Store";
-            }
-            else if (source == "GOG")
-            {
-                source = "GOG";
-            }
-            else if (source == "Humble")
-            {
-                source = "Humble Store";
-            }
-            else if (source == "itch.io")
-            {
-                source = "Itch.io";
-            }
-            else if (source == "Steam")
-            {
-                source = "Steam";
-            }
-            else if (source == "Ubisoft Connect" || source == "Uplay")
-            {
-                source = "Ubisoft Store";
-            }
-            else if (source == "Indiegala")
-            {
-                source = "IndieGala Store";
-            }
-            else if (source == "Xbox") // TODO is this still accurate?
-            {
-                source = "Microsoft Store";
-            }
-            else if (source == "Fanatical")
-            {
-                source = "Fanatical";
-            }
+        //    // Normalize the source to match the ITAD shop names
+        //    // All ITAD shops with a corresponding Playnite library addon are below, some names match so there is no change.
+        //    if (source == "Amazon" || source == "Amazon Games" )
+        //    {
+        //        source = "Amazon";
+        //    }
+        //    else if (source == "Battle.net")
+        //    {
+        //        source = "Blizzard";
+        //    }
+        //    else if (source == "EA app" || source == "Origin")
+        //    {
+        //        source = "EA Store";
+        //    }
+        //    else if (source == "Epic")
+        //    {
+        //        source = "Epic Game Store";
+        //    }
+        //    else if (source == "GOG")
+        //    {
+        //        source = "GOG";
+        //    }
+        //    else if (source == "Humble")
+        //    {
+        //        source = "Humble Store";
+        //    }
+        //    else if (source == "itch.io")
+        //    {
+        //        source = "Itch.io";
+        //    }
+        //    else if (source == "Steam")
+        //    {
+        //        source = "Steam";
+        //    }
+        //    else if (source == "Ubisoft Connect" || source == "Uplay")
+        //    {
+        //        source = "Ubisoft Store";
+        //    }
+        //    else if (source == "Indiegala")
+        //    {
+        //        source = "IndieGala Store";
+        //    }
+        //    else if (source == "Xbox") // TODO is this still accurate?
+        //    {
+        //        source = "Microsoft Store";
+        //    }
+        //    else if (source == "Fanatical")
+        //    {
+        //        source = "Fanatical";
+        //    }
 
-            if (shops.TryGetValue(source, out var id))
-            {
-                return new ImportJSONGameCopy
-                {
-                    shop = id,
-                    redeemed = true,
-                };
-            }
+        //    if (shops.TryGetValue(source, out var id))
+        //    {
+        //        return new ImportJSONGameCopy
+        //        {
+        //            shop = id,
+        //            redeemed = true,
+        //        };
+        //    }
 
-            return new ImportJSONGameCopy
-            {
-                note = source,
-                redeemed = true,
-            };
-        }
-
-        public class ImportJSON
-        {
-            public string version;
-
-            public List<ImportJSONData> data;
-        }
-
-        public class ImportJSONData
-        {
-            public string group;
-
-            public ImportJSONGame[] games;
-
-            [SerializationPropertyName("public")]
-            public bool public_;
-        }
-
-        public class ImportJSONGame
-        {
-            public string id;
-
-            public string title;
-
-            public List<ImportJSONGameCopy> copies;
-        }
-
-        public class ImportJSONGameCopy
-        {
-            public int? shop;
-
-            public string note;
-
-            public int? added;
-
-            public bool redeemed;
-        }
-
-        public class ShopsJSON
-        {
-            public int id;
-
-            public string title;
-        }
+        //    return new ImportJSONGameCopy
+        //    {
+        //        note = source,
+        //        redeemed = true,
+        //    };
+        // }
 
         public class ITADException : Exception
         {

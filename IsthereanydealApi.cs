@@ -1,5 +1,6 @@
 ﻿using Playnite.SDK;
 using Playnite.SDK.Data;
+using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -7,6 +8,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.UI.WebControls;
+using System.Windows.Markup;
 using static IsthereanydealCollectionSync.IsthereanydealClient;
 using static IsthereanydealCollectionSync.ItadApi;
 using static IsthereanydealCollectionSync.ItadOauthConstants;
@@ -104,14 +107,12 @@ namespace IsthereanydealCollectionSync
         public int expires_in;
     }
 
-    public class ItadUserInfo
+    public class ItadApiUserInfo
     {
         public string username;
     }
 
-    // The field name must match JSON response so disabling naming style warning.
-    // We only do it for this class because binding source must be a property. Fields can't be bound.
-    public class ItadCategory : ObservableObject
+    public class ItadApiCategory : ObservableObject
     {
 #pragma warning disable IDE1006 // Naming Styles
         public int id { get; set; }
@@ -120,11 +121,58 @@ namespace IsthereanydealCollectionSync
 #pragma warning restore IDE1006 // Naming Styles
     }
 
-    public class ItadGame
+    // https://docs.isthereanydeal.com/#tag/Collection-Copies/operation/collection-copies-v1-get
+    public class ItadApiCopy
     {
-        public string name;
+        public int id;
+
+        public class Game
+        {
+            public int id;
+        }
+        public Game game;
+
+        public class Shop
+        {
+            public int id;
+            public string name;
+        }
+        public Shop shop;
+
         public bool redeemed;
+
+        public class Price
+        {
+            public int amount;
+            public int amountInt;
+            public string currency;
+        }
+        public Price price;
+
+        public string note;
+        public class Tag
+        {
+            public int id;
+            public string tag;
+        }
+        public Tag[] tag;
+        public string added;
+    }
+
+    public class ItadApiCopyInput
+    {
+        public bool redeemed; // required by ITAD
+        public string gameId; // required by ITAD
         public ItadShop shop;
+        private object price = null;
+        public string note = null;
+        public string[] tags = null;
+
+        public ItadApiCopyInput(string ItadGameId, bool redeemed, ItadShop shop = ItadShop.Unknown)
+        {
+            this.gameId = ItadGameId;
+            this.shop = shop;
+        }
     }
 
     // The number is shopId which was gotten from https://api.isthereanydeal.com/service/shops/v1
@@ -134,14 +182,44 @@ namespace IsthereanydealCollectionSync
         Ea = 52,
         Epic = 16,
         Gog = 35,
+        HumbleBundle = 18,
         Indiegala = 42,
         Steam = 61,
         Ubisoft = 62,
+        Xbox = 48, // Including Microsoft Store.
 
-        // For games from manually added unsupported stores.
-        Unknown = -1, 
+        // For manually added games or games from unsupported stores.
+        Unknown = -1
+    }
 
-        Xbox = 48, 
+    public class ItadShopExtension
+    {
+        public static ItadShop FromGameSource(GameSource source)
+        {
+            switch (source.Name)
+            {
+                //case "Battle.net":
+                //    return ItadShop.Blizzard;
+                case "EA app":
+                    return ItadShop.Ea;
+                case "Epic":
+                    return ItadShop.Epic;
+                case "GOG":
+                    return ItadShop.Gog;
+                case "Humble Bundle":
+                    return ItadShop.HumbleBundle;
+                //case "Indiegala":
+                //    return ItadShop.Indiegala;
+                case "Steam":
+                    return ItadShop.Steam;
+                case "Ubisoft Connect":
+                    return ItadShop.Ubisoft;
+                case "Xbox":
+                    return ItadShop.Xbox;
+                default:
+                    return ItadShop.Unknown;
+            }
+        }
     }
 
     public class ItadApi
@@ -178,56 +256,120 @@ namespace IsthereanydealCollectionSync
         {
             var response = await GetAsync($"{API_URL}user/info/v2");
             await ThrowOnBadHttpStatus(response, "Failed to get user info");
-            var userInfo = await TryParse<ItadUserInfo>(response, "Failed to parse user info");
+            var userInfo = await TryParse<ItadApiUserInfo>(response, "Failed to parse user info");
 
             return userInfo.username;
         }
 
-        internal async Task<ItadCategory[]> GetCategories()
+        internal async Task<ItadApiCategory[]> GetCategories()
         {
             var response = await GetAsync($"{API_URL}collection/groups/v1");
             await ThrowOnBadHttpStatus(response, "Failed to get categories");
-            var categories = await TryParse<ItadCategory[]>(response, "Failed to parse categories");
+            var categories = await TryParse<ItadApiCategory[]>(response, "Failed to parse categories");
 
             return categories;
         }
 
-        internal async Task<ItadCategory> CreateCategory(string title, bool isPublic = false)
+        internal async Task<ItadApiCategory> CreateCategory(string title, bool isPublic = false)
         {
             var response = await PostAsync($"{API_URL}collection/groups/v1");
             await ThrowOnBadHttpStatus(response, $"Failed to create new {(isPublic ? "public" : "private")} category {title}");
-            var category = await TryParse<ItadCategory>(response, "Failed to parse category");
+            var category = await TryParse<ItadApiCategory>(response, "Failed to parse category");
 
             return category;
         }
 
         // TODO
-        internal async Task AddCopies(IEnumerable<ItadGame> games)
+        /// <summary>
+        /// Look up ITAD game IDs by their names
+        /// </summary>
+        /// <param name="games">An array of game names</param>
+        /// <returns>A dictionary of game IDs on the shop to their respective game IDs on ITAD</returns>
+        internal async Task<Dictionary<string, string>> LookUpGameId(string[] games)
         {
-            var response = await PostAsync($"{API_URL}collection/copies/v1");
-            await ThrowOnBadHttpStatus(response, $"Failed to import new game");
-            var category = await TryParse<ItadCategory>(response, "Failed to parse category");
+            Dictionary<string, string> res = new Dictionary<string, string>();
+
+            var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(games));
+            await ThrowOnBadHttpStatus(response, $"Failed to look up game IDs");
+            res = Serialization.FromJsonStream<Dictionary<string, string>>(await response.Content.ReadAsStreamAsync());
+
+            return res;
+        }
+
+        internal async Task AddCopies(ItadApiCopyInput[] games)
+        {
+            var response = await PostJsonAsync($"{API_URL}collection/copies/v1", games);
+            await ThrowOnBadHttpStatus(response, $"Failed to add copies");
+            var category = await TryParse<ItadApiCategory>(response, "Failed to parse add copies");
+        }
+
+        internal async Task<ItadApiCopy[]> GetCopies()
+        {
+            var response = await GetAsync($"{API_URL}collection/copies/v1");
+            await ThrowOnBadHttpStatus(response, $"Failed to get copies");
+            var copies = await TryParse<ItadApiCopy[]>(response, "Failed to parse copies");
+
+            return copies;
+        }
+
+        internal async Task DeleteFromWaitList(string[] gameIds)
+        {
+            var response = await DeleteJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
+            await ThrowOnBadHttpStatus(response, $"Failed to delete from waitlist");
+        }
+
+        internal async Task GetCollection()
+        {
+            var response = await GetAsync($"{API_URL}collection/games/v1");
+            await ThrowOnBadHttpStatus(response, $"Failed to get collection");
+            var category = await TryParse<ItadApiCategory>(response, "Failed to parse category");
         }
 
         private async Task<HttpResponseMessage> GetAsync(string url)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("Authorization", $"Bearer {credential.access_token}");
 
-            return await RetryOnUnauthorized(request);
-
+            return await AuthorizeAndSend(request);
         }
 
         private async Task<HttpResponseMessage> PostAsync(string url)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Headers.Add("Authorization", $"Bearer {credential.access_token}");
             
-            return await RetryOnUnauthorized(request);
+            return await AuthorizeAndSend(request);
         }
 
-        private async Task<HttpResponseMessage> RetryOnUnauthorized(HttpRequestMessage request)
+        private static StringContent JsonContentOf<T>(T data)
+            where T : class
         {
+            return new StringContent(Serialization.ToJson(data), Encoding.UTF8, "application/json");
+        }
+
+        private async Task<HttpResponseMessage> PostJsonAsync<T>(string url, T payload)
+        where T: class
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContentOf(payload)
+            };
+
+            return await AuthorizeAndSend(request);
+        }
+
+        private async Task<HttpResponseMessage> DeleteJsonAsync<T>(string url, T payload)
+        where T: class
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, url)
+            {
+                Content = JsonContentOf(payload)
+            };
+
+            return await AuthorizeAndSend(request);
+        }
+
+        private async Task<HttpResponseMessage> AuthorizeAndSend(HttpRequestMessage request)
+        {
+            request.Headers.Add("Authorization", $"Bearer {credential.access_token}");
             var response = await Client.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)

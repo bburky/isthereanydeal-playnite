@@ -1,13 +1,7 @@
 ﻿using Playnite.SDK;
-using Playnite.SDK.Events;
-using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -16,17 +10,21 @@ namespace IsthereanydealCollectionSync
     public class IsthereanydealCollectionSync : GenericPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
-        private IsthereanydealCollectionSyncSettingsViewModel settings { get; set; }
+        public IsthereanydealCollectionSyncSettingsViewModel Settings { get; }
+        public readonly IsthereanydealClient client;
+        public readonly IPlayniteAPI playniteApi;
 
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)
         {
-            settings = new IsthereanydealCollectionSyncSettingsViewModel(this);
+            Settings = new IsthereanydealCollectionSyncSettingsViewModel(this);
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
             };
+            client = new IsthereanydealClient(this, Settings);
+            playniteApi = api;
         }
 
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
@@ -42,41 +40,40 @@ namespace IsthereanydealCollectionSync
                         {
                             //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
 
-                            using (var view = PlayniteApi.WebViews.CreateOffscreenView())
+                            if (!client.IsUserLoggedIn())
                             {
-                                var client = new IsthereanydealClient(this, view);
-                                if (!await client.GetIsUserLoggedIn())
-                                {
-                                    PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in \"Add-ons...\" settings", "IsThereAnyDeal Collection Sync");
-                                    return;
-                                }
-                                var json = await client.generateImportJson(settings.Settings.ImportGroup, itemArgs.Games);
-                                var result = await client.Import(json, settings.Settings.ImportModeReplace, settings.Settings.RemoveFromWaitlist);
-                                PlayniteApi.Dialogs.ShowMessage($"Sent {itemArgs.Games.Count} games to IsThereAnyDeal\n\nIsThereAnyDeal response:\n{result}\n\n\"added\" will be reduced if games are already in collection\n\"copies imported\" will be reduced if \"ignore games already in collection\" setting is used", "IsThereAnyDeal Collection Sync");
+                                PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in \"Add-ons...\" settings", "IsThereAnyDeal Collection Sync");
+                                return;
                             }
+                            await client.Import(itemArgs.Games);
+                            PlayniteApi.Dialogs.ShowMessage($"Successfully added {itemArgs.Games.Count} games.");
                         }
                         catch (Exception ex)
                         {
-                            PlayniteApi.Dialogs.ShowErrorMessage(ex.ToString(), "IsThereAnyDeal Collection Sync Error");
+                            PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, "IsThereAnyDeal Collection Sync Error");
                         }
                     }), new GlobalProgressOptions($"Importing games into Is There Any Deal collection"));
                 }
             };
-        }
 
-        public override void OnGameInstalled(OnGameInstalledEventArgs args)
-        {
-            // Add code to be executed when game is finished installing.
-        }
-
-        public override void OnLibraryUpdated(OnLibraryUpdatedEventArgs args)
-        {
-            // Add code to be executed when library is updated.
+            yield return new GameMenuItem
+            {
+                Description = "Debug Game Info",
+                Action = (itemArgs) =>
+                {
+                    var game = itemArgs.Games[0];
+                    PlayniteApi.Dialogs.ShowMessage(
+                        $"Name = \"{game.Name}\"\n" +
+                        $"Source =\"{game.Source}\"\n" +
+                        $"SourceID = \"{game.SourceId}\""
+                    );
+                }
+            };
         }
 
         public override ISettings GetSettings(bool firstRunSettings)
         {
-            return settings;
+            return Settings;
         }
 
         public override UserControl GetSettingsView(bool firstRunSettings)
