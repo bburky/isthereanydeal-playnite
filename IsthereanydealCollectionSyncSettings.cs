@@ -9,11 +9,44 @@ namespace IsthereanydealCollectionSync
 {
     public class IsthereanydealCollectionSyncSettings : ObservableObject
     {
-        private bool importModeReplace = false; // true replace, false ignore
+        private bool importModeReplace = false; // true replace, false ignore // Old
         private bool removeFromWaitlist = false;
-        public bool ImportModeReplace { get => importModeReplace; set => SetValue(ref importModeReplace, value); }
-        public ItadApiCredential credential;
-        public bool RemoveFromWaitlist { get => removeFromWaitlist; set => SetValue(ref removeFromWaitlist, value); }
+        private bool redeemCollection = false;
+
+        public bool ImportModeReplace 
+        { 
+            get => importModeReplace;
+            set => SetValue(ref importModeReplace, value); 
+        } // Old
+
+        public ItadApiCredential Credential { get; set; }
+
+        private string[] tags;
+        public string[] Tags
+        {
+            get => tags;
+            set => SetValue(ref tags, value);
+        }
+
+        private string note;
+
+        public string Note {
+            get => note;
+            set => SetValue(ref note, value);
+        }
+
+        public bool RemoveFromWaitlist 
+        { 
+            get => removeFromWaitlist; 
+            set => SetValue(ref removeFromWaitlist, value); 
+        }
+
+        public bool RedeemCollection 
+        { 
+            get => redeemCollection;
+            set => SetValue(ref redeemCollection, value); 
+        }
+
         public int SelectedCategoryId { get; set; } = 0;
     }
 
@@ -104,7 +137,7 @@ namespace IsthereanydealCollectionSync
 
         public void EndEdit()
         {
-            Settings.credential = plugin.client.Api.Credential;
+            Settings.Credential = plugin.client.Api.Credential;
             plugin.SavePluginSettings(Settings);
         }
 

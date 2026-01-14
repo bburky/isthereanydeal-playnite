@@ -21,7 +21,7 @@ namespace IsthereanydealCollectionSync
         {
             this.plugin = plugin;
             InfoUpdate += settings.OnModelChanged;
-            Api = new ItadApi(settings.Settings.credential);
+            Api = new ItadApi(settings.Settings.Credential);
             this.settings = settings.Settings;
 
             Task.WhenAll(
