@@ -9,6 +9,7 @@
              d:DesignHeight="400" d:DesignWidth="600">
     <UserControl.Resources>
         <local:StringToStringArray x:Key="StringToStringArray"/>
+        <local:ComparisonConverter x:Key="ComparisonConverter" />
         <sys:Boolean x:Key="True">True</sys:Boolean>
         <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
@@ -60,6 +61,9 @@
         <StackPanel Orientation="Horizontal"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFreebie}" IsChecked="{Binding Settings.RedeemCollection}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist}" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
+        <TextBlock Text="Games already in Collection"/>
+        <RadioButton Content="Ignore" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}}" />
+        <RadioButton Content="Replace games and all their copies" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}}" />
         <StackPanel Orientation="Horizontal">
             <Label Target="{Binding ElementName=Tags}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelTags}" />
             <TextBox Name="Tags" Text="{Binding Settings.Tags, Converter={StaticResource StringToStringArray}}" MinWidth="100" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncTagsTooltip}" />

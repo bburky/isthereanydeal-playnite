@@ -9,15 +9,15 @@ namespace IsthereanydealCollectionSync
 {
     public class IsthereanydealCollectionSyncSettings : ObservableObject
     {
-        private bool importModeReplace = false; // true replace, false ignore // Old
+        private ImportMode importMode = ImportMode.Ignore;
         private bool removeFromWaitlist = false;
         private bool redeemCollection = false;
 
-        public bool ImportModeReplace 
+        public ImportMode ImportMode 
         { 
-            get => importModeReplace;
-            set => SetValue(ref importModeReplace, value); 
-        } // Old
+            get => importMode;
+            set => SetValue(ref importMode, value); 
+        }
 
         public ItadApiCredential Credential { get; set; }
 
@@ -48,6 +48,12 @@ namespace IsthereanydealCollectionSync
         }
 
         public int SelectedCategoryId { get; set; } = 0;
+    }
+
+    public enum ImportMode
+    {
+        Ignore,
+        Replace,
     }
 
     public class IsthereanydealCollectionSyncSettingsViewModel : ObservableObject, ISettings
