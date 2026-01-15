@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">你好 {0} ！</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFreebie">將曾經為限時免費的遊戲標記為「已領取」</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">在 waitlist 中移除已匯入的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">匯入的遊戲的標籤，以半形逗號 「,」 隔開</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">例如: tag1,tag2,tag3</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">匯入的遊戲的筆記</sys:String>
+</ResourceDictionary>

@@ -1,4 +1,11 @@
+<?xml version="1.0"?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">Hello {0}!</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFreebie">Mark collections "redeemed" when they have been given away before</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove collection from Waitlist</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">Tags for collection separated by comma</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note for collection</sys:String>
 </ResourceDictionary>
