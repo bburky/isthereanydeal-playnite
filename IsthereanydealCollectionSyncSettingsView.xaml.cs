@@ -18,7 +18,7 @@ namespace IsthereanydealCollectionSync
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is null)
+            if (value is null || !(value is string[]))
             {
                 return "";
             }
@@ -28,7 +28,7 @@ namespace IsthereanydealCollectionSync
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is null)
+            if (value is null || !(value is string))
             {
                 return new string[0];
             }
