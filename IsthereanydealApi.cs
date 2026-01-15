@@ -414,6 +414,7 @@ namespace IsthereanydealCollectionSync
         internal const string CLIENT_ID = "3f4d9e8636de0604";
         internal const string CLIENT_SECRET = "53d0e6d7a082e5c7232242bc90d540adc5496af9";
         internal const string REDIRECT_URI = "https://isthereanydeal.com/";
+        internal const string API_KEY = "97cf351a85f16263a977b5fb78876df2cfece7b0";
 
         // Use one HttpClient accross every class.
         internal static readonly HttpClient Client = new HttpClient();
