@@ -1,4 +1,4 @@
-﻿using Playnite.SDK;
+using Playnite.SDK;
 using Playnite.SDK.Data;
 using System;
 using System.Collections.Generic;
@@ -92,19 +92,7 @@ namespace IsthereanydealCollectionSync
 
         public string PluginPath => plugin.GetPluginUserDataPath();
 
-        public string AuthenticationStatus
-        {
-            get {
-                if (!plugin.client.IsUserLoggedIn())
-                {
-                    return "Not logged in";
-                }
-                else
-                {
-                    return $"Hello {plugin.client.Username}!";
-                }
-            }
-        }
+        public bool IsUserLoggedIn => plugin.client.IsUserLoggedIn();
 
         public RelayCommand<object> LoginCommand
         {
@@ -121,8 +109,6 @@ namespace IsthereanydealCollectionSync
             {
                 Categories.Add(cat);
             }
-
-            OnPropertyChanged(nameof(AuthenticationStatus));
         }
 
         public void BeginEdit()

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="IsthereanydealCollectionSync.IsthereanydealCollectionSyncSettingsView"
+<UserControl x:Class="IsthereanydealCollectionSync.IsthereanydealCollectionSyncSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,6 +9,8 @@
              d:DesignHeight="400" d:DesignWidth="600">
     <UserControl.Resources>
         <local:StringToStringArray x:Key="StringToStringArray"/>
+        <sys:Boolean x:Key="True">True</sys:Boolean>
+        <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
     <StackPanel Margin="30,0,30,0" VerticalAlignment="Stretch">
         <StackPanel.Resources>
@@ -30,18 +32,40 @@
             </Style>
         </StackPanel.Resources>
         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-            <Button Content="Authenticate" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="0,5,5,5"/>
-            <TextBlock Margin="10,5,5,5" Text="{Binding AuthenticationStatus, IsAsync=True}" />
+            <Button Content="{DynamicResource LOCSteamAuthenticateLabel}" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="0,5,5,5"/>
+            <TextBlock>
+                <TextBlock.Tag>
+                    <PriorityBinding>
+                        <Binding Path="IsUserLoggedIn"/>
+                        <Binding Source="{x:Null}" />
+                    </PriorityBinding>
+                </TextBlock.Tag>
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                        <Style.Triggers>
+                            <Trigger Property="Tag" Value="{StaticResource True}">
+                                <Setter Property="Text" Value="{DynamicResource LOCSteamLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{StaticResource False}">
+                                <Setter Property="Text" Value="{DynamicResource LOCSteamNotLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{x:Null}">
+                                <Setter Property="Text" Value="{DynamicResource LOCSteamLoginChecking}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </StackPanel>
         <StackPanel Orientation="Horizontal"/>
-        <CheckBox Content="Mark collections freebie when they have been given away before" IsChecked="{Binding Settings.RedeemCollection}"/>
-        <CheckBox Content="Remove imported games from Waitlist" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFreebie}" IsChecked="{Binding Settings.RedeemCollection}"/>
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist}" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
         <StackPanel Orientation="Horizontal">
-            <Label Target="{Binding ElementName=Tags}">Tags for collection separated by comma.</Label>
-            <TextBox Name="Tags" Text="{Binding Settings.Tags, Converter={StaticResource StringToStringArray}}" MinWidth="100" ToolTip="Example: tag1,tag2,tag3" />
+            <Label Target="{Binding ElementName=Tags}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelTags}" />
+            <TextBox Name="Tags" Text="{Binding Settings.Tags, Converter={StaticResource StringToStringArray}}" MinWidth="100" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncTagsTooltip}" />
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-            <Label Target="{Binding ElementName=Note}">Note for collection</Label>
+            <Label Target="{Binding ElementName=Note}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelNote}" />
             <TextBox Name="Note" Text="{Binding Settings.Note}" MinWidth="100"></TextBox>
         </StackPanel>
         <TextBlock Text="{Binding Settings.PluginPath}" />
