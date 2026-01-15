@@ -1,4 +1,4 @@
-﻿using Playnite.SDK;
+using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
@@ -339,12 +339,6 @@ namespace IsthereanydealCollectionSync
             return await AuthorizeAndSend(request);
         }
 
-        private static StringContent JsonContentOf<T>(T data)
-            where T : class
-        {
-            return new StringContent(Serialization.ToJson(data), Encoding.UTF8, "application/json");
-        }
-
         private async Task<HttpResponseMessage> PostJsonAsync<T>(string url, T payload)
         where T: class
         {
@@ -403,6 +397,11 @@ namespace IsthereanydealCollectionSync
                 string errorContent = await response.Content.ReadAsStringAsync();
                 throw new ITADException($"{msg} [{response.StatusCode:d} {response.StatusCode}]: {errorContent}");
             }
+        }
+        private static StringContent JsonContentOf<T>(T data)
+            where T : class
+        {
+            return new StringContent(Serialization.ToJson(data), Encoding.UTF8, "application/json");
         }
     }
 
