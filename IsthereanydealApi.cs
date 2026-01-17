@@ -27,7 +27,7 @@ namespace IsthereanydealCollectionSync
             pkce = new Pkce();
             State = RandomString.GetUrlSafeString(32);
 
-            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={State}&scope=user_info coll_write coll_read";
+            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={State}&scope=user_info coll_write coll_read wait_write";
         }
 
         /// <summary>
@@ -86,23 +86,32 @@ namespace IsthereanydealCollectionSync
 
             await ThrowOnBadHttpStatus(response, "Failed to exchange tokens");
 
-            var credential = await TryParse< ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
+            var credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
 
             return new ItadApi(credential);
         }
     }
 
+    /* Classes that prefixes "ItadApi" are those to be serialize
+     * and deserialized.
+     * 
+     * Playnite API did not document lots of the behavoir about
+     * serialization. This comment will try to document more about
+     * it. Note this only applies to JSON and is subjected to 
+     * change in the future.
+     * 
+     * - To-be-deserialized members must be public or otherwise ignored.
+     * - Member name must match exactly. This means naming convention might be broken.
+     * - TryFromJson returns true as long as the input is in JSON format. This has the following implication.
+     *   - You can't guarantee all members are deserialized
+     *     to by the serializer.
+     *   - Members that the serializer failed to deserialize 
+     *     to will be default-initialized.
+    */
     public class ItadApiCredential
     {
         public string access_token;
         public string refresh_token;
-
-        // "Bearer"
-        [DontSerialize]
-        public string token_type;
-
-        [DontSerialize]
-        public int expires_in;
     }
 
     public class ItadApiUserInfo
@@ -159,21 +168,23 @@ namespace IsthereanydealCollectionSync
 
     public class ItadApiCopyInput
     {
-        public bool redeemed; // required by ITAD
-        public string gameId; // required by ITAD
-        public ItadShop shop;
-        private object price = null;
+        public bool redeemed; // Required by ITAD
+        public string gameId; // Required by ITAD
+        public ItadShop? shop = null;
+        private object price = null; // Unsupported to change by the end user. Just needed for serialization.
         public string note = null;
         public string[] tags = null;
 
-        public ItadApiCopyInput(string ItadGameId, bool redeemed, ItadShop shop = ItadShop.Unknown)
+        public ItadApiCopyInput(string ItadGameId, bool redeemed)
         {
             this.gameId = ItadGameId;
-            this.shop = shop;
+            this.redeemed = redeemed;
         }
     }
 
     // The number is shopId which was gotten from https://api.isthereanydeal.com/service/shops/v1
+    // It should be null for manually added
+    // games or games from unsupported stores.
     public enum ItadShop
     {
         Blizzard = 4,
@@ -185,16 +196,13 @@ namespace IsthereanydealCollectionSync
         Steam = 61,
         Ubisoft = 62,
         Xbox = 48, // Including Microsoft Store.
-
-        // For manually added games or games from unsupported stores.
-        Unknown = -1
     }
 
     public class ItadShopExtension
     {
-        public static ItadShop FromGameSource(GameSource source)
+        public static ItadShop? FromGameSource(GameSource source)
         {
-            switch (source.Name)
+            switch (source?.Name)
             {
                 //case "Battle.net":
                 //    return ItadShop.Blizzard;
@@ -215,7 +223,7 @@ namespace IsthereanydealCollectionSync
                 case "Xbox":
                     return ItadShop.Xbox;
                 default:
-                    return ItadShop.Unknown;
+                    return null;
             }
         }
     }
@@ -277,12 +285,11 @@ namespace IsthereanydealCollectionSync
             return category;
         }
 
-        // TODO
         /// <summary>
         /// Look up ITAD game IDs by their names
         /// </summary>
         /// <param name="games">An array of game names</param>
-        /// <returns>A dictionary of game IDs on the shop to their respective game IDs on ITAD</returns>
+        /// <returns>A dictionary of game names and their ITAD game IDs</returns>
         internal async Task<Dictionary<string, string>> LookUpGameId(string[] games)
         {
             Dictionary<string, string> res = new Dictionary<string, string>();
@@ -314,6 +321,7 @@ namespace IsthereanydealCollectionSync
         {
             var response = await DeleteJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
             await ThrowOnBadHttpStatus(response, $"Failed to delete from waitlist");
+            throw new ITADException("Waitlist failing test");
         }
 
         internal async Task GetCollection()

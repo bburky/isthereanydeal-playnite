@@ -1,4 +1,4 @@
-﻿using Playnite.SDK;
+using Playnite.SDK;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync
 {
+    using static Common;
+
     public class IsthereanydealClient
     {
         private static readonly ILogger logger = LogManager.GetLogger();
@@ -16,6 +18,8 @@ namespace IsthereanydealCollectionSync
         internal ItadApiCategory[] Categories { get; private set; }
         public event EventHandler InfoUpdate;
         private readonly IsthereanydealCollectionSyncSettings settings;
+        private readonly Database database;
+        public Category Category { get; private set; }
 
         public IsthereanydealClient(IsthereanydealCollectionSync plugin, IsthereanydealCollectionSyncSettingsViewModel settings)
         {
@@ -23,6 +27,19 @@ namespace IsthereanydealCollectionSync
             InfoUpdate += settings.OnModelChanged;
             Api = new ItadApi(settings.Settings.Credential);
             this.settings = settings.Settings;
+            database = Database.LoadOrInit(plugin);
+
+            if (!(database.CategoryId == Guid.Empty))
+            {
+                try
+                {
+                    plugin.PlayniteApi.Database.Categories.Remove(database.CategoryId);
+                }
+                catch
+                {
+
+                }
+            }
 
             Task.WhenAll(
                 InitUsername(), InitCategories()
@@ -109,60 +126,123 @@ namespace IsthereanydealCollectionSync
             var lookUpTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var gamesGroupedByShop = games
                 .Select(game => new { 
-                    game.Name, 
+                    Game = game, 
                     Source = ItadShopExtension.FromGameSource(game.Source) 
                 })
-                .GroupBy(game => game.Source, game => game.Name);
-
-            foreach (var shop_games in gamesGroupedByShop)
-            {
-                System.Diagnostics.Debug.WriteLine($"({shop_games.Key}, {shop_games.Count()})");
-
-                foreach (var game in shop_games)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{game}");
-                }
-
-                System.Diagnostics.Debug.WriteLine("");
-            }
+                .GroupBy(game => game.Source, game => game.Game);
 
             Dictionary<string, string> gameIds = await lookUpTask;
-
+            var failedGames = new List<Game>();
             var tasks = new List<Task>();
 
             foreach (var shopGames in gamesGroupedByShop)
             {
-                ItadShop shop = shopGames.Key;
+                ItadShop? shop = shopGames.Key;
 
-                var itadCopies = shopGames.Select(gameId =>
+                var itadCopies = shopGames.Select(game =>
                     {
-                        if (gameIds.TryGetValue(gameId, out string gameItadId))
+                        if (gameIds.TryGetValue(game.Name, out string gameItadId))
                         {
-                            return new
+                            var copy = new ItadApiCopyInput(gameItadId, false)
                             {
-                                Copy = new ItadApiCopyInput(gameItadId, false, shop),
-                                Id = gameItadId
+                                shop = shop,
+                                note = settings.Note,
+                                tags = settings.Tags,
+                            };
+
+                            return new AddCopyInput
+                            {
+                                Game = game,
+                                Copy = copy,
+                                ItadId = gameItadId
                             };
                         }
+
+                        failedGames.Add(game);
 
                         return null;
                     })
                     .Where(copy => !(copy is null))
                     .ToArray();
 
-                var addCopiesTask = Api.AddCopies(itadCopies.Select(copy => copy.Copy).ToArray());
-
-                if (settings.RemoveFromWaitlist)
-                {
-                    addCopiesTask = addCopiesTask.ContinueWith(async (task) => {
-                        await Api.DeleteFromWaitList(itadCopies.Select(copy => copy.Id).ToArray());
-                      });
-                }
-
-                tasks.Add(addCopiesTask);
+                tasks.Add(AddCopyAsync(itadCopies));
             }
 
-            await Task.WhenAll(tasks);
+            try
+            {
+                var resultTask = Task.WhenAll(tasks);
+                await resultTask;
+            }
+            catch (AggregateException ex)
+            {
+                failedGames = new List<Game>();
+
+                foreach (Exception e in ex.InnerExceptions)
+                {
+                    failedGames.AddRange((Game[])e.Data["games"]);
+                }
+            }
+            catch
+            {
+                failedGames = games;
+            }
+
+            if (failedGames.Count > 0)
+            {
+                if (Category is null)
+                {
+                    Category = new Category(database.CategoryName);
+                    database.CategoryId = Category.Id;
+
+                    _ = Task.Run(database.Save);
+                }
+
+                failedGames
+                    .AsParallel()
+                    .ForEach(game => AddCategory(plugin.PlayniteApi, game, Category));
+
+                throw new ITADException($"{games.Count - failedGames.Count} succeeded.\n{failedGames.Count} failed.");
+            }
+        }
+
+        private class AddCopyInput
+        {
+            public Game Game;
+            public ItadApiCopyInput Copy;
+            public string ItadId;
+        }
+
+        // Possible alternate: Use Task.Unwrap() and
+        // embed in Import() using Task.ContinueWith().
+        // Todo: Attach games into exception
+        async private Task AddCopyAsync(AddCopyInput[] itadCopies)
+        {
+            try
+            {
+                //await Api.AddCopies(itadCopies.Select(copy => copy.Copy).ToArray());
+            }
+            catch
+            {
+                var exception = new ITADException("Failed to add copy");
+                exception.Data["games"] = itadCopies.Select(copy => copy.Game).ToArray();
+
+                throw exception;
+            }
+
+            if (settings.RemoveFromWaitlist)
+            {
+                try
+                {
+                    await Api.DeleteFromWaitList(itadCopies.Select(copy => copy.ItadId).ToArray());
+                }
+                catch
+                {
+                    var exception = new ITADException("Failed to remove games from waitlist");
+                    exception.Data["games"] = itadCopies.Select(copy => copy.Game).ToArray();
+
+                    throw exception;
+                }
+            }
         }
 
         //async public Task<ImportJSONGameCopy> getCopyForGame(Game game)
