@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.UI.WebControls;
 using static IsthereanydealCollectionSync.IsthereanydealClient;
 using static IsthereanydealCollectionSync.ItadApi;
 using static IsthereanydealCollectionSync.ItadOauthConstants;
@@ -135,38 +136,23 @@ namespace IsthereanydealCollectionSync
 
         public class Game
         {
-            public int id;
+            public string id;
         }
         public Game game;
 
         public class Shop
         {
             public int id;
-            public string name;
         }
         public Shop shop;
 
-        public bool redeemed;
-
-        public class Price
+        public bool MatchShop(ItadShop? shop)
         {
-            public int amount;
-            public int amountInt;
-            public string currency;
+            return this.shop is null && shop is null || this?.shop.id == (int)shop;
         }
-        public Price price;
-
-        public string note;
-        public class Tag
-        {
-            public int id;
-            public string tag;
-        }
-        public Tag[] tag;
-        public string added;
     }
 
-    public class ItadApiCopyInput
+    public class ItadApiAddCopyInput
     {
         public bool redeemed; // Required by ITAD
         public string gameId; // Required by ITAD
@@ -175,10 +161,25 @@ namespace IsthereanydealCollectionSync
         public string note = null;
         public string[] tags = null;
 
-        public ItadApiCopyInput(string ItadGameId, bool redeemed)
+        public ItadApiAddCopyInput(string ItadGameId, bool redeemed)
         {
             this.gameId = ItadGameId;
             this.redeemed = redeemed;
+        }
+    }
+
+    public class ItadApiUpdateCopyInput
+    {
+        public int id; // required by ITAD
+        public bool? redeemed = null;
+        public ItadShop? shop = null;
+        private object price = null;
+        public string note = null;
+        public string[] tags = null;
+
+        public ItadApiUpdateCopyInput(int ItadCopyId)
+        {
+            this.id = ItadCopyId;
         }
     }
 
@@ -200,6 +201,11 @@ namespace IsthereanydealCollectionSync
 
     public class ItadShopExtension
     {
+        /// <summary>
+        /// Map GameSource to ItadShop.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>ItadShop or null if the mapping fails</returns>
         public static ItadShop? FromGameSource(GameSource source)
         {
             switch (source?.Name)
@@ -301,7 +307,7 @@ namespace IsthereanydealCollectionSync
             return res;
         }
 
-        internal async Task AddCopies(ItadApiCopyInput[] games)
+        internal async Task AddCopies(ItadApiAddCopyInput[] games)
         {
             var response = await PostJsonAsync($"{API_URL}collection/copies/v1", games);
             await ThrowOnBadHttpStatus(response, $"Failed to add copies");
@@ -315,6 +321,12 @@ namespace IsthereanydealCollectionSync
             var copies = await TryParse<ItadApiCopy[]>(response, "Failed to parse copies");
 
             return copies;
+        }
+
+        internal async Task UpdateCopies(ItadApiUpdateCopyInput[] games)
+        {
+            var response = await PatchJsonAsync($"{API_URL}collection/copies/v1", games);
+            await ThrowOnBadHttpStatus(response, $"Failed to get copies");
         }
 
         internal async Task DeleteFromWaitList(string[] gameIds)
@@ -360,6 +372,16 @@ namespace IsthereanydealCollectionSync
         where T: class
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, url)
+            {
+                Content = JsonContentOf(payload)
+            };
+
+            return await AuthorizeAndSend(request);
+        }
+        private async Task<HttpResponseMessage> PatchJsonAsync<T>(string url, T payload)
+        where T: class
+        {
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), url)
             {
                 Content = JsonContentOf(payload)
             };

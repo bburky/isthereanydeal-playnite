@@ -2,7 +2,10 @@ using Playnite.SDK;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync
@@ -121,73 +124,127 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        async public Task Import(List<Game> games)
+        /// <summary>
+        /// Synchronize games to ITAD.
+        /// </summary>
+        /// <param name="games"></param>
+        /// <returns>List of games that failed to synchronize.</returns>
+        async public Task<IList<Game>> Import(IList<Game> games)
         {
-            var lookUpTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
-            var gamesGroupedByShop = games
-                .Select(game => new { 
-                    Game = game, 
-                    Source = ItadShopExtension.FromGameSource(game.Source) 
-                })
-                .GroupBy(game => game.Source, game => game.Game);
+            var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
+            var getCopiesTask = Api.GetCopies();
 
-            Dictionary<string, string> gameIds = await lookUpTask;
+            Dictionary<string, string> gameIds = await lookUpGameIdTask;
+            ItadApiCopy[] existingCopies = await getCopiesTask;
             var failedGames = new List<Game>();
-            var tasks = new List<Task>();
+            var copiesTasks = new List<Task>();
+            var toBeAddedCopies = new List<AddCopyInput>();
+            var toBeUpdatedCopies = new List<UpdateCopyInput>();
 
-            foreach (var shopGames in gamesGroupedByShop)
+            foreach (Game game in games)
             {
-                ItadShop? shop = shopGames.Key;
+                ItadShop? shop = ItadShopExtension.FromGameSource(game.Source);
 
-                var itadCopies = shopGames.Select(game =>
+                if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
+                {
+                    var copy = existingCopies
+                        .Where(c => 
+                            c.game.id == gameItadId &&
+                            (c.shop is null ||
+                            c.MatchShop(shop))
+                        )
+                        .OrderByDescending(c => c.shop is null)
+                        .FirstOrDefault();
+                        
+                    if (copy is null)
                     {
-                        if (gameIds.TryGetValue(game.Name, out string gameItadId))
+                        var itadAddCopyInput = new ItadApiAddCopyInput(gameItadId, false)
                         {
-                            var copy = new ItadApiCopyInput(gameItadId, false)
-                            {
-                                shop = shop,
-                                note = settings.Note,
-                                tags = settings.Tags,
-                            };
+                            shop = shop,
+                            note = settings.Note,
+                            tags = settings.Tags,
+                        };
 
-                            return new AddCopyInput
-                            {
-                                Game = game,
-                                Copy = copy,
-                                ItadId = gameItadId
-                            };
-                        }
+                        var toBeAddedCopy = new AddCopyInput
+                        {
+                            Game = game,
+                            Copy = itadAddCopyInput,
+                            Id = gameItadId,
+                        };
 
-                        failedGames.Add(game);
+                        toBeAddedCopies.Add(toBeAddedCopy);
 
-                        return null;
-                    })
-                    .Where(copy => !(copy is null))
-                    .ToArray();
+                        continue;
+                    }
 
-                tasks.Add(AddCopyAsync(itadCopies));
+                    if (settings.ImportMode == ImportMode.Ignore)
+                    {
+                        continue;
+                    }
+
+                    var itadUpdateCopyInput = new ItadApiUpdateCopyInput(copy.id)
+                    {
+                        shop = shop,
+                        note = settings.Note,
+                        tags = settings.Tags,
+                    };
+
+                    var toBeUpdatedCopy = new UpdateCopyInput
+                    {
+                        Game = game,
+                        Copy = itadUpdateCopyInput,
+                        Id = gameItadId,
+                    };
+
+                    toBeUpdatedCopies.Add(toBeUpdatedCopy);
+                }
+                else
+                {
+                    failedGames.Add(game);
+                }
+            }
+
+            if (toBeAddedCopies.HasItems())
+            {
+                var copyInput = toBeAddedCopies.ToArray();
+                var task = AddCopyAsync(copyInput);
+
+                if (settings.RemoveFromWaitlist)
+                {
+                    task = task.ContinueWith(async (t) =>
+                    {
+                        var waitlist = copyInput.Select(c => new DeleteFromWaitlistInput(c)).ToArray();
+                        await DeleteFromWaitlistAsync(waitlist);
+                    }).Unwrap();
+                }
+
+                copiesTasks.Add(task);
+            }
+
+            if (toBeUpdatedCopies.HasItems())
+            {
+                var copyInput = toBeUpdatedCopies.ToArray();
+                var task = UpdateCopyAsync(copyInput);
+
+                if (settings.RemoveFromWaitlist)
+                {
+                    task = task.ContinueWith(async (t) =>
+                    {
+                        var waitlist = copyInput.Select(c => new DeleteFromWaitlistInput(c)).ToArray();
+                        await DeleteFromWaitlistAsync(waitlist);
+                    }).Unwrap();
+                }
+
+                copiesTasks.Add(task);
             }
 
             try
             {
-                var resultTask = Task.WhenAll(tasks);
-                await resultTask;
+                await Task.WhenAll(copiesTasks);
             }
-            catch (AggregateException ex)
-            {
-                failedGames = new List<Game>();
+            catch { }
 
-                foreach (Exception e in ex.InnerExceptions)
-                {
-                    failedGames.AddRange((Game[])e.Data["games"]);
-                }
-            }
-            catch
-            {
-                failedGames = games;
-            }
-
-            if (failedGames.Count > 0)
+            if (failedGames.HasItems())
             {
                 if (Category is null)
                 {
@@ -197,29 +254,53 @@ namespace IsthereanydealCollectionSync
                     _ = Task.Run(database.Save);
                 }
 
-                failedGames
-                    .AsParallel()
-                    .ForEach(game => AddCategory(plugin.PlayniteApi, game, Category));
-
-                throw new ITADException($"{games.Count - failedGames.Count} succeeded.\n{failedGames.Count} failed.");
+                foreach (var game in failedGames) {
+                    AddCategory(plugin.PlayniteApi, game, Category);
+                }
             }
+
+            return failedGames;
         }
 
         private class AddCopyInput
         {
             public Game Game;
-            public ItadApiCopyInput Copy;
-            public string ItadId;
+            public ItadApiAddCopyInput Copy;
+            public string Id;
         }
 
-        // Possible alternate: Use Task.Unwrap() and
-        // embed in Import() using Task.ContinueWith().
-        // Todo: Attach games into exception
+        private class UpdateCopyInput
+        {
+            public Game Game;
+            public ItadApiUpdateCopyInput Copy;
+            public string Id;
+        }
+
+        private class DeleteFromWaitlistInput
+        {
+            public Game Game;
+            public string Id;
+
+            public DeleteFromWaitlistInput() {}
+
+            public DeleteFromWaitlistInput(AddCopyInput copy)
+            {
+                Game = copy.Game;
+                Id = copy.Id;
+            }
+
+            public DeleteFromWaitlistInput(UpdateCopyInput copy)
+            {
+                Game = copy.Game;
+                Id = copy.Id;
+            }
+        }
+
         async private Task AddCopyAsync(AddCopyInput[] itadCopies)
         {
             try
             {
-                //await Api.AddCopies(itadCopies.Select(copy => copy.Copy).ToArray());
+                await Api.AddCopies(itadCopies.Select(copy => copy.Copy).ToArray());
             }
             catch
             {
@@ -228,20 +309,35 @@ namespace IsthereanydealCollectionSync
 
                 throw exception;
             }
+        }
 
-            if (settings.RemoveFromWaitlist)
+        async private Task UpdateCopyAsync(UpdateCopyInput[] itadCopies)
+        {
+            try
             {
-                try
-                {
-                    await Api.DeleteFromWaitList(itadCopies.Select(copy => copy.ItadId).ToArray());
-                }
-                catch
-                {
-                    var exception = new ITADException("Failed to remove games from waitlist");
-                    exception.Data["games"] = itadCopies.Select(copy => copy.Game).ToArray();
+                await Api.UpdateCopies(itadCopies.Select(copy => copy.Copy).ToArray());
+            }
+            catch
+            {
+                var exception = new ITADException("Failed to update copy");
+                exception.Data["games"] = itadCopies.Select(copy => copy.Game).ToArray();
 
-                    throw exception;
-                }
+                throw exception;
+            }
+        }
+
+        async private Task DeleteFromWaitlistAsync(DeleteFromWaitlistInput[] waitlist)
+        {
+            try
+            {
+                await Api.DeleteFromWaitList(waitlist.Select(w => w.Id).ToArray());
+            }
+            catch
+            {
+                var exception = new ITADException("Failed to remove games from waitlist");
+                exception.Data["games"] = waitlist.Select(w => w.Game).ToArray();
+
+                throw exception;
             }
         }
 

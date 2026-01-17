@@ -1,5 +1,4 @@
 using Playnite.SDK;
-using Playnite.SDK.Data;
 using Playnite.SDK.Events;
 using Playnite.SDK.Plugins;
 using System;
@@ -49,14 +48,14 @@ namespace IsthereanydealCollectionSync
                                 PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in \"Add-ons...\" settings", "IsThereAnyDeal Collection Sync");
                                 return;
                             }
-                            await client.Import(itemArgs.Games);
-                            PlayniteApi.Dialogs.ShowMessage($"Successfully added {itemArgs.Games.Count} games.");
+                            var failedGames = await client.Import(itemArgs.Games);
+                            PlayniteApi.Dialogs.ShowMessage($"Successfully added {itemArgs.Games.Count} games.\n{failedGames.Count} failed.");
                         }
                         catch (Exception ex)
                         {
                             PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, "IsThereAnyDeal Collection Sync Error");
                         }
-                    }), new GlobalProgressOptions($"Importing games into Is There Any Deal collection"));
+                    }), new GlobalProgressOptions($"Importing games into IsThereAnyDeal collection"));
                 }
             };
 
