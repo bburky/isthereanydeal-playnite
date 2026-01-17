@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using System.Web.UI.WebControls;
 using static IsthereanydealCollectionSync.IsthereanydealClient;
 using static IsthereanydealCollectionSync.ItadApi;
 using static IsthereanydealCollectionSync.ItadOauthConstants;

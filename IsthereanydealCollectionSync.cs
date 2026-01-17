@@ -32,16 +32,15 @@ namespace IsthereanydealCollectionSync
         {
             yield return new GameMenuItem
             {
-                Description = "Add to IsThereAnyDeal Collection",
+                Description = Localized("LOCIsThereAnyDealCollectionSyncImportMenu"),
                 Action = (itemArgs) =>
                 {
-                    string dialogText = "Importing games into IsThereAnyDeal collection";
+                    string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple");
                     
                     if (itemArgs.Games.Count == 1)
                     {
-                        dialogText = $"Importing {itemArgs.Games[0].Name} into IsThereAnyDeal collection";
+                        dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", itemArgs.Games[0].Name);
                     }
-                    
 
                     PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
                     {
@@ -51,40 +50,41 @@ namespace IsthereanydealCollectionSync
 
                             if (!client.IsUserLoggedIn())
                             {
-                                PlayniteApi.Dialogs.ShowErrorMessage("User not logged in.\n\nLog into IsThereAnyDeal in \"Add-ons...\" settings", "IsThereAnyDeal Collection Sync");
+                                PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                                 return;
                             }
                             var failedGames = await client.Import(itemArgs.Games);
 
-                            var resultDialogText = $"Successfully added {itemArgs.Games.Count} games";
+                            var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", itemArgs.Games.Count);
 
                             if (itemArgs.Games.Count == 1)
                             {
                                 if (failedGames.HasItems())
                                 {
-                                    resultDialogText = $"Failed to add {failedGames[0].Name}";
+                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", failedGames[0].Name);
                                 }
                                 else
                                 {
-                                    resultDialogText = $"Successfully added {itemArgs.Games[0].Name}";
+                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", itemArgs.Games[0].Name);
                                 }
-                            } else
+                            }
+                            else
                             {
                                 if (failedGames.Count == itemArgs.Games.Count)
                                 {
-                                    resultDialogText = $"Failed to add {itemArgs.Games.Count} games.";
+                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", itemArgs.Games.Count);
                                 }
                                 else if (failedGames.HasItems())
                                 {
-                                    resultDialogText = $"Successfully added {itemArgs.Games.Count - failedGames.Count} games.\nFailed to add {failedGames.Count} games.";
+                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", itemArgs.Games.Count - failedGames.Count, failedGames.Count);
                                 }
                             }
 
-                            PlayniteApi.Dialogs.ShowMessage(resultDialogText);
+                            PlayniteApi.Dialogs.ShowMessage(resultDialogText, ("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                         }
                         catch (Exception ex)
                         {
-                            PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, "IsThereAnyDeal Collection Sync Error");
+                            PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                         }
                     }), new GlobalProgressOptions(dialogText));
                 }
@@ -105,6 +105,16 @@ namespace IsthereanydealCollectionSync
         {
             client.RemoveCategoryFromDatabase();
             base.OnApplicationStopped(args);
+        }
+
+        public static string Localized(string key)
+        {
+            return ResourceProvider.GetString(key);
+        }
+
+        public static string Localized(string key, params object[] args)
+        {
+            return string.Format(ResourceProvider.GetString(key), args);
         }
     }
 }

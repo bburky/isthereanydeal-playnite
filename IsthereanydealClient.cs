@@ -375,7 +375,7 @@ namespace IsthereanydealCollectionSync
         //    };
         // }
 
-        private void AddCategory(Game game)
+        public void AddCategory(Game game)
         {
             if (game.CategoryIds is null)
             {
@@ -387,7 +387,7 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private void RemoveCategoryFromDatabase()
+        public void RemoveCategoryFromDatabase()
         {
             if (Category is null)
             {
