@@ -62,8 +62,8 @@
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFreebie}" IsChecked="{Binding Settings.RedeemCollection}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist}" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
         <TextBlock Text="Games already in Collection"/>
-        <RadioButton Content="Ignore" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}}" />
-        <RadioButton Content="Replace games and all their copies" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}}" />
+        <RadioButton Content="Ignore" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Ignore}}" />
+        <RadioButton Content="Replace games and all their copies" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Replace}}" />
         <StackPanel Orientation="Horizontal">
             <Label Target="{Binding ElementName=Tags}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelTags}" />
             <TextBox Name="Tags" Text="{Binding Settings.Tags, Converter={StaticResource StringToStringArray}}" MinWidth="100" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncTagsTooltip}" />
