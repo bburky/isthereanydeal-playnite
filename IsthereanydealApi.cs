@@ -3,6 +3,7 @@ using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,7 +28,7 @@ namespace IsthereanydealCollectionSync
             pkce = new Pkce();
             State = RandomString.GetUrlSafeString(32);
 
-            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={State}&scope=user_info coll_write coll_read wait_write";
+            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={State}&scope=user_info coll_write coll_read wait_write wait_read";
         }
 
         /// <summary>
@@ -149,6 +150,11 @@ namespace IsthereanydealCollectionSync
         {
             return this.shop is null && shop is null || this?.shop.id == (int)shop;
         }
+    }
+
+    public class ItadWaitlistItem
+    {
+        public string id;
     }
 
     public class ItadApiAddCopyInput
@@ -323,10 +329,21 @@ namespace IsthereanydealCollectionSync
             await ThrowOnBadHttpStatus(response, $"Failed to get copies");
         }
 
-        internal async Task DeleteFromWaitList(ICollection<string> gameIds)
+        internal async Task<ICollection<string>> GetWaitlist()
         {
-            var response = await DeleteJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
+            var response = await GetAsync($"{API_URL}waitlist/games/v1");
             await ThrowOnBadHttpStatus(response, $"Failed to delete from waitlist");
+
+            var waitlist = await TryParse<ItadWaitlistItem[]>(response, "Failed to parse waitlist");
+            var res = waitlist.Select(w => w.id).ToArray();
+
+            return res;
+        }
+
+        internal async Task AddToWaitlist(ICollection<string> gameIds)
+        {
+            var response = await PutJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
+            await ThrowOnBadHttpStatus(response, $"Failed to add to waitlist");
         }
 
         private async Task<HttpResponseMessage> GetAsync(string url)
@@ -364,6 +381,18 @@ namespace IsthereanydealCollectionSync
 
             return await AuthorizeAndSend(request);
         }
+
+        private async Task<HttpResponseMessage> PutJsonAsync<T>(string url, T payload)
+        where T : class
+        {
+            var request = new HttpRequestMessage(HttpMethod.Put, url)
+            {
+                Content = JsonContentOf(payload)
+            };
+
+            return await AuthorizeAndSend(request);
+        }
+
         private async Task<HttpResponseMessage> PatchJsonAsync<T>(string url, T payload)
         where T: class
         {

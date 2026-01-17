@@ -130,13 +130,20 @@ namespace IsthereanydealCollectionSync
             var getCopiesTask = Api.GetCopies();
             RemoveCategoryFromDatabase();
 
+            Task<ICollection<string>> getWaitlistTask = null;
+
+            if (!settings.RemoveFromWaitlist)
+            {
+                getWaitlistTask = Api.GetWaitlist();
+            }
+
             IDictionary<string, string> gameIds = await lookUpGameIdTask;
             ICollection<ItadApiCopy> existingCopies = await getCopiesTask;
             var failedGames = new List<Game>();
             var copiesTasks = new List<Task>();
             var toBeAddedCopies = new List<ItadApiAddCopyInput>();
             var toBeUpdatedCopies = new List<ItadApiUpdateCopyInput>();
-            var waitlist = new List<string>();
+            var waitlist = getWaitlistTask is null ? null : await getWaitlistTask;
 
             foreach (Game game in games)
             {
@@ -163,7 +170,6 @@ namespace IsthereanydealCollectionSync
                         };
 
                         toBeAddedCopies.Add(toBeAddedCopy);
-                        waitlist.Add(gameItadId);
 
                         continue;
                     }
@@ -181,7 +187,6 @@ namespace IsthereanydealCollectionSync
                     };
 
                     toBeUpdatedCopies.Add(toBeUpdatedCopy);
-                    waitlist.Add(gameItadId);
                 }
                 else
                 {
@@ -205,11 +210,13 @@ namespace IsthereanydealCollectionSync
 
             var resultTask = Task.WhenAll(copiesTasks);
 
-            if (settings.RemoveFromWaitlist && waitlist.HasItems())
+            if (!settings.RemoveFromWaitlist && waitlist.HasItems())
             {
-                resultTask = resultTask.ContinueWith(async (t) =>
+                resultTask = resultTask.ContinueWith(async (task) =>
                 {
-                    await DeleteFromWaitlistAsync(waitlist.ToArray());
+                    // ITAD removes games on collection, so
+                    // re-adding them back
+                    await Api.AddToWaitlist(waitlist);
                 }, TaskContinuationOptions.OnlyOnRanToCompletion).Unwrap();
             }
 
@@ -254,18 +261,6 @@ namespace IsthereanydealCollectionSync
             catch
             {
                 throw new ITADException("Failed to update copy");
-            }
-        }
-
-        async private Task DeleteFromWaitlistAsync(string[] games)
-        {
-            try
-            {
-                await Api.DeleteFromWaitList(games);
-            }
-            catch
-            {
-                throw new ITADException("Failed to remove games from waitlist");
             }
         }
 
