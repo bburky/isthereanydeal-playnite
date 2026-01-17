@@ -37,6 +37,14 @@ namespace IsthereanydealCollectionSync
                 Description = "Add to IsThereAnyDeal Collection",
                 Action = (itemArgs) =>
                 {
+                    string dialogText = "Importing games into IsThereAnyDeal collection";
+                    
+                    if (itemArgs.Games.Count == 1)
+                    {
+                        dialogText = $"Importing {itemArgs.Games[0].Name} into IsThereAnyDeal collection";
+                    }
+                    
+
                     PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
                     {
                         try
@@ -49,13 +57,38 @@ namespace IsthereanydealCollectionSync
                                 return;
                             }
                             var failedGames = await client.Import(itemArgs.Games);
-                            PlayniteApi.Dialogs.ShowMessage($"Successfully added {itemArgs.Games.Count} games.\n{failedGames.Count} failed.");
+
+                            var resultDialogText = $"Successfully added {itemArgs.Games.Count} games";
+
+                            if (itemArgs.Games.Count == 1)
+                            {
+                                if (failedGames.HasItems())
+                                {
+                                    resultDialogText = $"Failed to add {failedGames[0].Name}";
+                                }
+                                else
+                                {
+                                    resultDialogText = $"Successfully added {itemArgs.Games[0].Name}";
+                                }
+                            } else
+                            {
+                                if (failedGames.Count == itemArgs.Games.Count)
+                                {
+                                    resultDialogText = $"Failed to add {itemArgs.Games.Count} games.";
+                                }
+                                else if (failedGames.HasItems())
+                                {
+                                    resultDialogText = $"Successfully added {itemArgs.Games.Count - failedGames.Count} games.\nFailed to add {failedGames.Count} games.";
+                                }
+                            }
+
+                            PlayniteApi.Dialogs.ShowMessage(resultDialogText);
                         }
                         catch (Exception ex)
                         {
                             PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, "IsThereAnyDeal Collection Sync Error");
                         }
-                    }), new GlobalProgressOptions($"Importing games into IsThereAnyDeal collection"));
+                    }), new GlobalProgressOptions(dialogText));
                 }
             };
 
