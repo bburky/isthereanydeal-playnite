@@ -156,7 +156,6 @@ namespace IsthereanydealCollectionSync
         public bool redeemed; // Required by ITAD
         public string gameId; // Required by ITAD
         public ItadShop? shop = null;
-        private object price = null; // Unsupported to change by the end user. Just needed for serialization.
         public string note = null;
         public string[] tags = null;
 
@@ -172,7 +171,6 @@ namespace IsthereanydealCollectionSync
         public int id; // required by ITAD
         public bool? redeemed = null;
         public ItadShop? shop = null;
-        private object price = null;
         public string note = null;
         public string[] tags = null;
 

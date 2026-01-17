@@ -89,7 +89,7 @@ namespace IsthereanydealCollectionSync
         public void Login()
         {
             var oauth = new OauthCodeExchange();
-            using (var webView = plugin.playniteApi.WebViews.CreateView(500, 700))
+            using (var webView = plugin.PlayniteApi.WebViews.CreateView(500, 700))
             {
                 webView.LoadingChanged += async (s, e) =>
                 {
@@ -124,7 +124,7 @@ namespace IsthereanydealCollectionSync
         /// </summary>
         /// <param name="games"></param>
         /// <returns>List of games that failed to synchronize.</returns>
-        async public Task<IList<Game>> Import(IList<Game> games)
+        async public Task<IList<Game>> Import(ICollection<Game> games)
         {
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();

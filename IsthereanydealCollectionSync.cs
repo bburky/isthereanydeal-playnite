@@ -1,8 +1,10 @@
 using Playnite.SDK;
 using Playnite.SDK.Events;
+using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -13,7 +15,6 @@ namespace IsthereanydealCollectionSync
         private static readonly ILogger logger = LogManager.GetLogger();
         public IsthereanydealCollectionSyncSettingsViewModel Settings { get; }
         public readonly IsthereanydealClient client;
-        public readonly IPlayniteAPI playniteApi;
 
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
@@ -25,7 +26,19 @@ namespace IsthereanydealCollectionSync
                 HasSettings = true
             };
             client = new IsthereanydealClient(this, Settings);
-            playniteApi = api;
+        }
+
+        public override IEnumerable<MainMenuItem> GetMainMenuItems(GetMainMenuItemsArgs args)
+        {
+            yield return new MainMenuItem
+            {
+                MenuSection = "@" + Localized("LOCIsThereAnyDealCollectionSync"),
+                Description = "Import all games",
+                Action = (itemArgs) =>
+                {
+                    Import(PlayniteApi.Database.Games);
+                }
+            };
         }
 
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
@@ -35,58 +48,7 @@ namespace IsthereanydealCollectionSync
                 Description = Localized("LOCIsThereAnyDealCollectionSyncImportMenu"),
                 Action = (itemArgs) =>
                 {
-                    string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple");
-                    
-                    if (itemArgs.Games.Count == 1)
-                    {
-                        dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", itemArgs.Games[0].Name);
-                    }
-
-                    PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
-                    {
-                        try
-                        {
-                            //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
-
-                            if (!client.IsUserLoggedIn())
-                            {
-                                PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                                return;
-                            }
-                            var failedGames = await client.Import(itemArgs.Games);
-
-                            var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", itemArgs.Games.Count);
-
-                            if (itemArgs.Games.Count == 1)
-                            {
-                                if (failedGames.HasItems())
-                                {
-                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", failedGames[0].Name);
-                                }
-                                else
-                                {
-                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", itemArgs.Games[0].Name);
-                                }
-                            }
-                            else
-                            {
-                                if (failedGames.Count == itemArgs.Games.Count)
-                                {
-                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", itemArgs.Games.Count);
-                                }
-                                else if (failedGames.HasItems())
-                                {
-                                    resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", itemArgs.Games.Count - failedGames.Count, failedGames.Count);
-                                }
-                            }
-
-                            PlayniteApi.Dialogs.ShowMessage(resultDialogText, ("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                        }
-                        catch (Exception ex)
-                        {
-                            PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                        }
-                    }), new GlobalProgressOptions(dialogText));
+                    Import(itemArgs.Games);
                 }
             };
         }
@@ -104,7 +66,6 @@ namespace IsthereanydealCollectionSync
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
             client.RemoveCategoryFromDatabase();
-            base.OnApplicationStopped(args);
         }
 
         public static string Localized(string key)
@@ -115,6 +76,65 @@ namespace IsthereanydealCollectionSync
         public static string Localized(string key, params object[] args)
         {
             return string.Format(ResourceProvider.GetString(key), args);
+        }
+
+        private void Import(ICollection<Game> games)
+        {
+            string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple");
+
+            if (games.Count == 1)
+            {
+                dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
+            }
+
+            PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
+            {
+                try
+                {
+                    //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
+
+                    if (!client.IsUserLoggedIn())
+                    {
+                        PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        return;
+                    }
+
+                    var failedGames = await client.Import(games);
+
+                    var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
+
+                    if (games.Count == 1)
+                    {
+                        var game = games.First();
+
+                        if (failedGames.HasItems())
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", game.Name);
+                        }
+                        else
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", game.Name);
+                        }
+                    }
+                    else
+                    {
+                        if (failedGames.Count == games.Count)
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", games.Count);
+                        }
+                        else if (failedGames.HasItems())
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", games.Count - failedGames.Count, failedGames.Count);
+                        }
+                    }
+
+                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, ("LOCIsThereAnyDealCollectionSync"));
+                }
+                catch (Exception ex)
+                {
+                    PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                }
+            }), new GlobalProgressOptions(dialogText));
         }
     }
 }
