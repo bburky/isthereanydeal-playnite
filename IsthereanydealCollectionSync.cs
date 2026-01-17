@@ -91,56 +91,6 @@ namespace IsthereanydealCollectionSync
                     }), new GlobalProgressOptions(dialogText));
                 }
             };
-
-            yield return new GameMenuItem
-            {
-                Description = "Debug Game Info",
-                Action = (itemArgs) =>
-                {
-                    var game = itemArgs.Games[0];
-                    PlayniteApi.Dialogs.ShowMessage(
-                        $"Name = \"{game.Name}\"\n" +
-                        $"Source =\"{game.Source}\"\n" +
-                        $"SourceID = \"{game.SourceId}\""
-                    );
-                }
-            };
-
-            var categoryName = "FooCate";
-
-            yield return new GameMenuItem
-            {
-                Description = $"Add category \"{categoryName}\"",
-                Action = (itemArgs) =>
-                {
-                    foreach (var item in playniteApi.Database.Categories)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"{item.Id} => \"{item.Name}\" ({categoryName == item.Name})");
-                    }
-
-                    foreach (var game in itemArgs.Games)
-                    {
-                        if (game.Categories is null)
-                        {
-                            game.CategoryIds = new List<Guid> { playniteApi.Database.Categories.First(cate => cate.Name == categoryName).Id };
-                        }
-                        else
-                        {
-                            game.Categories.Add(playniteApi.Database.Categories.First(cate => cate.Name == categoryName));
-                        }
-                    }
-                }
-            };
-
-            yield return new GameMenuItem()
-            {
-                Description = $"Create a new category \"{categoryName}\"",
-                Action = (itemArgs) =>
-                {
-                    var cate = new Playnite.SDK.Models.Category(categoryName);
-                    playniteApi.Database.Categories.Add(cate);
-                }
-            };
         }
 
         public override ISettings GetSettings(bool firstRunSettings)
