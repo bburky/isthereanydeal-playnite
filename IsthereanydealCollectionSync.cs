@@ -3,10 +3,8 @@ using Playnite.SDK.Events;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
-using static IsthereanydealCollectionSync.Common;
 
 namespace IsthereanydealCollectionSync
 {
@@ -105,8 +103,7 @@ namespace IsthereanydealCollectionSync
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
-            RemoveCategoryFromDatabase(playniteApi, client.Category);
-
+            client.RemoveCategoryFromDatabase();
             base.OnApplicationStopped(args);
         }
     }
