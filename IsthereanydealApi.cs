@@ -157,7 +157,7 @@ namespace IsthereanydealCollectionSync
         public string gameId; // Required by ITAD
         public ItadShop? shop = null;
         public string note = null;
-        public string[] tags = null;
+        public ICollection<string> tags = null;
 
         public ItadApiAddCopyInput(string ItadGameId, bool redeemed)
         {
@@ -172,7 +172,7 @@ namespace IsthereanydealCollectionSync
         public bool? redeemed = null;
         public ItadShop? shop = null;
         public string note = null;
-        public string[] tags = null;
+        public ICollection<string> tags = null;
 
         public ItadApiUpdateCopyInput(int ItadCopyId)
         {
@@ -254,7 +254,7 @@ namespace IsthereanydealCollectionSync
 
             var content = new FormUrlEncodedContent(parameters);
 
-            HttpResponseMessage response = await ItadOauthConstants.Client.PostAsync($"{HOST_URL}oauth/token/", content);
+            HttpResponseMessage response = await Client.PostAsync($"{HOST_URL}oauth/token/", content);
 
             await ThrowOnBadHttpStatus(response, "Failed to refresh tokens");
 
@@ -270,7 +270,7 @@ namespace IsthereanydealCollectionSync
             return userInfo.username;
         }
 
-        internal async Task<ItadApiCategory[]> GetCategories()
+        internal async Task<ICollection<ItadApiCategory>> GetCategories()
         {
             var response = await GetAsync($"{API_URL}collection/groups/v1");
             await ThrowOnBadHttpStatus(response, "Failed to get categories");
@@ -291,27 +291,24 @@ namespace IsthereanydealCollectionSync
         /// <summary>
         /// Look up ITAD game IDs by their names
         /// </summary>
-        /// <param name="games">An array of game names</param>
+        /// <param name="gameNames">An array of game names</param>
         /// <returns>A dictionary of game names and their ITAD game IDs</returns>
-        internal async Task<Dictionary<string, string>> LookUpGameId(string[] games)
+        internal async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
         {
-            Dictionary<string, string> res = new Dictionary<string, string>();
-
-            var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(games));
+            var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(gameNames));
             await ThrowOnBadHttpStatus(response, $"Failed to look up game IDs");
-            res = Serialization.FromJsonStream<Dictionary<string, string>>(await response.Content.ReadAsStreamAsync());
+            var res = Serialization.FromJsonStream<Dictionary<string, string>>(await response.Content.ReadAsStreamAsync());
 
             return res;
         }
 
-        internal async Task AddCopies(ItadApiAddCopyInput[] games)
+        internal async Task AddCopies(ICollection<ItadApiAddCopyInput> games)
         {
             var response = await PostJsonAsync($"{API_URL}collection/copies/v1", games);
             await ThrowOnBadHttpStatus(response, $"Failed to add copies");
-            var category = await TryParse<ItadApiCategory>(response, "Failed to parse add copies");
         }
 
-        internal async Task<ItadApiCopy[]> GetCopies()
+        internal async Task<ICollection<ItadApiCopy>> GetCopies()
         {
             var response = await GetAsync($"{API_URL}collection/copies/v1");
             await ThrowOnBadHttpStatus(response, $"Failed to get copies");
@@ -320,24 +317,16 @@ namespace IsthereanydealCollectionSync
             return copies;
         }
 
-        internal async Task UpdateCopies(ItadApiUpdateCopyInput[] games)
+        internal async Task UpdateCopies(ICollection<ItadApiUpdateCopyInput> games)
         {
             var response = await PatchJsonAsync($"{API_URL}collection/copies/v1", games);
             await ThrowOnBadHttpStatus(response, $"Failed to get copies");
         }
 
-        internal async Task DeleteFromWaitList(string[] gameIds)
+        internal async Task DeleteFromWaitList(ICollection<string> gameIds)
         {
             var response = await DeleteJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
             await ThrowOnBadHttpStatus(response, $"Failed to delete from waitlist");
-            throw new ITADException("Waitlist failing test");
-        }
-
-        internal async Task GetCollection()
-        {
-            var response = await GetAsync($"{API_URL}collection/games/v1");
-            await ThrowOnBadHttpStatus(response, $"Failed to get collection");
-            var category = await TryParse<ItadApiCategory>(response, "Failed to parse category");
         }
 
         private async Task<HttpResponseMessage> GetAsync(string url)

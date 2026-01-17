@@ -13,7 +13,7 @@ namespace IsthereanydealCollectionSync
         private readonly IsthereanydealCollectionSync plugin;
         public ItadApi Api { get; private set; }
         internal string Username { get; private set; }
-        internal ItadApiCategory[] Categories { get; private set; }
+        internal ICollection<ItadApiCategory> Categories { get; private set; }
         public event EventHandler InfoUpdate;
         private readonly IsthereanydealCollectionSyncSettings settings;
         private readonly Database database;
@@ -124,14 +124,14 @@ namespace IsthereanydealCollectionSync
         /// </summary>
         /// <param name="games"></param>
         /// <returns>List of games that failed to synchronize.</returns>
-        async public Task<IList<Game>> Import(ICollection<Game> games)
+        async public Task<ICollection<Game>> Import(ICollection<Game> games)
         {
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();
             RemoveCategoryFromDatabase();
 
-            Dictionary<string, string> gameIds = await lookUpGameIdTask;
-            ItadApiCopy[] existingCopies = await getCopiesTask;
+            IDictionary<string, string> gameIds = await lookUpGameIdTask;
+            ICollection<ItadApiCopy> existingCopies = await getCopiesTask;
             var failedGames = new List<Game>();
             var copiesTasks = new List<Task>();
             var toBeAddedCopies = new List<ItadApiAddCopyInput>();
@@ -205,7 +205,7 @@ namespace IsthereanydealCollectionSync
 
             var resultTask = Task.WhenAll(copiesTasks);
 
-            if (settings.RemoveFromWaitlist)
+            if (settings.RemoveFromWaitlist && waitlist.HasItems())
             {
                 resultTask = resultTask.ContinueWith(async (t) =>
                 {
@@ -213,11 +213,7 @@ namespace IsthereanydealCollectionSync
                 }, TaskContinuationOptions.OnlyOnRanToCompletion).Unwrap();
             }
 
-            try
-            {
-                await Task.WhenAll(copiesTasks);
-            }
-            catch { }
+            await resultTask;
 
             if (failedGames.HasItems())
             {
@@ -237,7 +233,7 @@ namespace IsthereanydealCollectionSync
             return failedGames;
         }
 
-        async private Task AddCopyAsync(ItadApiAddCopyInput[] itadCopies)
+        async private Task AddCopyAsync(ICollection<ItadApiAddCopyInput> itadCopies)
         {
             try
             {
