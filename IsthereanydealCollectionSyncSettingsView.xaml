@@ -77,7 +77,8 @@
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam}" IsChecked="{Binding Settings.SkipSteam}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog}" IsChecked="{Binding Settings.SkipGog}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource}" IsChecked="{Binding Settings.SkipNoSource}" />
-        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic}" IsChecked="{Binding Settings.RedeemEpic}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
     </StackPanel>
 </UserControl>

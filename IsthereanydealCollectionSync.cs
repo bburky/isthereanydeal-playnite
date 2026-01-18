@@ -36,7 +36,14 @@ namespace IsthereanydealCollectionSync
                 Description = Localized("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
                 Action = (itemArgs) =>
                 {
-                    Import(PlayniteApi.Database.Games);
+                    if (!Settings.Settings.SyncHidden)
+                    {
+                        var games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
+                        Import(games);
+                    } else
+                    {
+                        Import(PlayniteApi.Database.Games);
+                    }
                 }
             };
         }

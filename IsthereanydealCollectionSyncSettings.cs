@@ -18,6 +18,7 @@ namespace IsthereanydealCollectionSync
         private bool skipNoSource = false;
         private bool syncDuplicateHider = true;
         private bool redeemEpic = false;
+        private bool syncHidden = false;
 
         public ImportMode ImportMode 
         { 
@@ -72,6 +73,12 @@ namespace IsthereanydealCollectionSync
         {
             get => redeemEpic;
             set => SetValue(ref redeemEpic, value);
+        }
+
+        public bool SyncHidden
+        {
+            get => syncHidden;
+            set => SetValue(ref syncHidden, value);
         }
     }
 
