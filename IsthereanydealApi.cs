@@ -9,7 +9,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using static IsthereanydealCollectionSync.IsthereanydealClient;
 using static IsthereanydealCollectionSync.ItadApi;
 using static IsthereanydealCollectionSync.ItadOauthConstants;
 
@@ -85,7 +84,7 @@ namespace IsthereanydealCollectionSync
 
             HttpResponseMessage response = await ItadOauthConstants.Client.PostAsync($"{HOST_URL}oauth/token/", content);
 
-            await ThrowOnBadHttpStatus(response, "Failed to exchange tokens");
+            await ThrowOnBadHttpStatus(response);
 
             var credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
 
@@ -271,7 +270,7 @@ namespace IsthereanydealCollectionSync
 
             HttpResponseMessage response = await Client.PostAsync($"{HOST_URL}oauth/token/", content);
 
-            await ThrowOnBadHttpStatus(response, "Failed to refresh tokens");
+            await ThrowOnBadHttpStatus(response);
 
             credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
         }
@@ -279,7 +278,7 @@ namespace IsthereanydealCollectionSync
         internal async Task<string> GetUsername()
         {
             var response = await GetAsync($"{API_URL}user/info/v2");
-            await ThrowOnBadHttpStatus(response, "Failed to get user info");
+            await ThrowOnBadHttpStatus(response);
             var userInfo = await TryParse<ItadApiUserInfo>(response, "Failed to parse user info");
 
             return userInfo.username;
@@ -288,7 +287,7 @@ namespace IsthereanydealCollectionSync
         internal async Task<ICollection<ItadApiCategory>> GetCategories()
         {
             var response = await GetAsync($"{API_URL}collection/groups/v1");
-            await ThrowOnBadHttpStatus(response, "Failed to get categories");
+            await ThrowOnBadHttpStatus(response);
             var categories = await TryParse<ItadApiCategory[]>(response, "Failed to parse categories");
 
             return categories;
@@ -297,7 +296,7 @@ namespace IsthereanydealCollectionSync
         internal async Task<ItadApiCategory> CreateCategory(string title, bool isPublic = false)
         {
             var response = await PostAsync($"{API_URL}collection/groups/v1");
-            await ThrowOnBadHttpStatus(response, $"Failed to create new {(isPublic ? "public" : "private")} category {title}");
+            await ThrowOnBadHttpStatus(response);
             var category = await TryParse<ItadApiCategory>(response, "Failed to parse category");
 
             return category;
@@ -311,7 +310,7 @@ namespace IsthereanydealCollectionSync
         internal async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
         {
             var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(gameNames));
-            await ThrowOnBadHttpStatus(response, $"Failed to look up game IDs");
+            await ThrowOnBadHttpStatus(response);
             var res = Serialization.FromJsonStream<Dictionary<string, string>>(await response.Content.ReadAsStreamAsync());
 
             return res;
@@ -320,13 +319,13 @@ namespace IsthereanydealCollectionSync
         internal async Task AddCopies(ICollection<ItadApiAddCopyInput> games)
         {
             var response = await PostJsonAsync($"{API_URL}collection/copies/v1", games);
-            await ThrowOnBadHttpStatus(response, $"Failed to add copies");
+            await ThrowOnBadHttpStatus(response);
         }
 
         internal async Task<ICollection<ItadApiCopy>> GetCopies()
         {
             var response = await GetAsync($"{API_URL}collection/copies/v1");
-            await ThrowOnBadHttpStatus(response, $"Failed to get copies");
+            await ThrowOnBadHttpStatus(response);
             var copies = await TryParse<ItadApiCopy[]>(response, "Failed to parse copies");
 
             return copies;
@@ -335,13 +334,13 @@ namespace IsthereanydealCollectionSync
         internal async Task UpdateCopies(ICollection<ItadApiUpdateCopyInput> games)
         {
             var response = await PatchJsonAsync($"{API_URL}collection/copies/v1", games);
-            await ThrowOnBadHttpStatus(response, $"Failed to get copies");
+            await ThrowOnBadHttpStatus(response);
         }
 
         internal async Task<ICollection<string>> GetWaitlist()
         {
             var response = await GetAsync($"{API_URL}waitlist/games/v1");
-            await ThrowOnBadHttpStatus(response, $"Failed to delete from waitlist");
+            await ThrowOnBadHttpStatus(response);
 
             var waitlist = await TryParse<ItadWaitlistItem[]>(response, "Failed to parse waitlist");
             var res = waitlist.Select(w => w.id).ToArray();
@@ -352,7 +351,7 @@ namespace IsthereanydealCollectionSync
         internal async Task AddToWaitlist(ICollection<string> gameIds)
         {
             var response = await PutJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
-            await ThrowOnBadHttpStatus(response, $"Failed to add to waitlist");
+            await ThrowOnBadHttpStatus(response);
         }
 
         private async Task<HttpResponseMessage> GetAsync(string url)
@@ -442,12 +441,16 @@ namespace IsthereanydealCollectionSync
             return res;
         }
 
-        internal async static Task ThrowOnBadHttpStatus(HttpResponseMessage response, string msg)
+        internal async static Task ThrowOnBadHttpStatus(HttpResponseMessage response)
         {
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                throw new ITADException($"{msg} [{response.StatusCode:d} {response.StatusCode}]: {errorContent}");
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                string responseContent = await response.Content.ReadAsStringAsync();
+                throw new ITADException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"", e);
             }
         }
         private static StringContent JsonContentOf<T>(T data)
