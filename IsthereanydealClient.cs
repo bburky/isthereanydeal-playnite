@@ -187,16 +187,12 @@ namespace IsthereanydealCollectionSync
 
             if (toBeAddedCopies.HasItems())
             {
-                var copyInput = toBeAddedCopies.ToArray();
-                var task = Api.AddCopies(copyInput);
-                copiesTasks.Add(task);
+                copiesTasks.Add(Api.AddCopies(toBeAddedCopies));
             }
 
             if (toBeUpdatedCopies.HasItems())
             {
-                var copyInput = toBeUpdatedCopies.ToArray();
-                var task = Api.UpdateCopies(toBeUpdatedCopies);
-                copiesTasks.Add(task);
+                copiesTasks.Add(Api.UpdateCopies(toBeUpdatedCopies));
             }
 
             var resultTask = Task.WhenAll(copiesTasks);

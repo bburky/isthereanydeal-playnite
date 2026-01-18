@@ -141,7 +141,6 @@ namespace IsthereanydealCollectionSync
 
                     ImportResult importResult = await client.Import(games);
 
-
                     var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
                         importResult.SkippedGames.Count,
                         importResult.FailedGames.Count); 
