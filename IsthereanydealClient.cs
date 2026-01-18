@@ -420,11 +420,6 @@ namespace IsthereanydealCollectionSync
 
             }
         }
-
-        public class ITADException : Exception
-        {
-            public ITADException(string message) : base(message) { }
-        }
     }
 
     public class ImportResult

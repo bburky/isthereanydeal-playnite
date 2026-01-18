@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="Exception.cs" />
     <Compile Include="IsthereanydealApi.cs" />
     <Compile Include="IsthereanydealClient.cs" />
     <Compile Include="IsthereanydealCollectionSync.cs" />
