@@ -13,13 +13,13 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note for collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">Skip Steam games for synchronization</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip">This is useful if you have linked Steam account on IsThereAnyDeal, as IsThereAnyDeal will
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">This is useful if you have linked Steam account on IsThereAnyDeal, as IsThereAnyDeal will
 set additional information during synchronization which this plugin is unable to.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">Skip GOG games for synchronization</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">
-This is useful if you have linked GOG account on IsThereAnyDeal, as IsThereAnyDeal will
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">This is useful if you have linked GOG account on IsThereAnyDeal, as IsThereAnyDeal will
 set additional information during synchronization which this plugin is unable to.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Synchronize games hidden by DuplicateHider</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">Add to IsThereAnyDeal Collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection</sys:String>
@@ -33,7 +33,7 @@ Log into IsThereAnyDeal in "Add-ons..." > settings</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">Failed to add {0}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">Skipped all {0} games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">Skipped {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed">Added {0} games successfully.
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">Added {0} games successfully.
 Skipped {1} games.
 Failed to import {2} games.</sys:String>
 </ResourceDictionary>

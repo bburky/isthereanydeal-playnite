@@ -13,11 +13,10 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">例如: tag1,tag2,tag3</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">匯入的遊戲的筆記</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">同步時跳過Steam遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip">若您在IsThereAnyDeal上有連結Steam帳號，
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結Steam帳號，
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">同步時跳過GOG遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">
-若您在IsThereAnyDeal上有連結GOG帳號，
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結GOG帳號，
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">加入至IsThereAnyDeal收藏庫</sys:String>
@@ -33,7 +32,7 @@ IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">無法匯入{0}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">跳過所有{0}遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">跳過{0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed">{0}款遊戲匯入成功
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">{0}款遊戲匯入成功
 {1}款遊戲被跳過
 {2}款遊戲匯入失敗</sys:String>
 </ResourceDictionary>

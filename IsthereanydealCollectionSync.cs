@@ -15,7 +15,7 @@ namespace IsthereanydealCollectionSync
         private static readonly ILogger logger = LogManager.GetLogger();
         public IsthereanydealCollectionSyncSettingsViewModel Settings { get; }
         public readonly IsthereanydealClient client;
-
+        private dynamic duplicateHider;
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)
@@ -48,7 +48,14 @@ namespace IsthereanydealCollectionSync
                 Description = Localized("LOCIsThereAnyDealCollectionSyncImportMenu"),
                 Action = (itemArgs) =>
                 {
-                    Import(itemArgs.Games);
+                    if (!(duplicateHider is null) && Settings.Settings.SyncDuplicateHider)
+                    {
+                        Import(itemArgs.Games.SelectMany(GetCopiesFromDuplicateHider).ToArray());
+                    }
+                    else
+                    {
+                        Import(itemArgs.Games);
+                    }
                 }
             };
         }
@@ -61,6 +68,13 @@ namespace IsthereanydealCollectionSync
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
             return new IsthereanydealCollectionSyncSettingsView();
+        }
+
+        public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
+        {
+            var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");
+
+            duplicateHider = PlayniteApi.Addons.Plugins.FirstOrDefault(p => p.Id == duplicateHiderGuid);
         }
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
@@ -76,6 +90,25 @@ namespace IsthereanydealCollectionSync
         public static string Localized(string key, params object[] args)
         {
             return string.Format(ResourceProvider.GetString(key), args);
+        }
+
+        public List<Game> GetCopiesFromDuplicateHider(Game game)
+        {
+            if (duplicateHider is null)
+            {
+                return new List<Game> { game };
+            }
+
+            var games = duplicateHider.GetCopies(game);
+
+            if (games is List<Game>)
+            {
+                return games;
+            }
+            else
+            {
+                return new List<Game> { game };
+            }
         }
 
         private void Import(ICollection<Game> games)
@@ -103,7 +136,7 @@ namespace IsthereanydealCollectionSync
 
 
                     var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
-                        importResult.SkippedGames,
+                        importResult.SkippedGames.Count,
                         importResult.FailedGames.Count); 
 
                     if (games.Count == 1)

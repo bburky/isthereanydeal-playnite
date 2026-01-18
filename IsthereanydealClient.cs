@@ -161,14 +161,14 @@ namespace IsthereanydealCollectionSync
                 if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
                 {
                     var copy = existingCopies
-                        .Where(c => 
+                        .Where(c =>
                             c.game.id == gameItadId &&
                             (c.shop is null ||
                             c.MatchShop(shop))
                         )
                         .OrderByDescending(c => c.shop is null)
                         .FirstOrDefault();
-                        
+
                     if (copy is null)
                     {
                         var toBeAddedCopy = new ItadApiAddCopyInput(gameItadId, false)

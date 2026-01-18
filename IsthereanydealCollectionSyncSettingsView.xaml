@@ -78,5 +78,6 @@
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam}" IsChecked="{Binding Settings.SkipSteam}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog}" IsChecked="{Binding Settings.SkipGog}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource}" IsChecked="{Binding Settings.SkipNoSource}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" />
     </StackPanel>
 </UserControl>

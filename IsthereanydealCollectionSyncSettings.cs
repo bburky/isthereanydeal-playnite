@@ -17,6 +17,7 @@ namespace IsthereanydealCollectionSync
         private bool skipSteam = true;
         private bool skipGog = true;
         private bool skipNoSource = false;
+        private bool syncDuplicateHider = true;
 
         public ImportMode ImportMode 
         { 
@@ -65,6 +66,12 @@ namespace IsthereanydealCollectionSync
         {
             get => skipNoSource;
             set => SetValue(ref skipNoSource, value);
+        }
+
+        public bool SyncDuplicateHider
+        {
+            get => syncDuplicateHider;
+            set => SetValue(ref syncDuplicateHider, value);
         }
 
         public int SelectedCategoryId { get; set; } = 0;
@@ -128,7 +135,8 @@ namespace IsthereanydealCollectionSync
             });
         }
 
-        public void OnModelChanged(object sender, EventArgs args) {
+        public void OnModelChanged(object sender, EventArgs args)
+        {
             Categories.Clear();
 
             foreach (var cat in plugin.client.Categories)
