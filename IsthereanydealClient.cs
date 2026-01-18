@@ -15,7 +15,8 @@ namespace IsthereanydealCollectionSync
         internal string Username { get; private set; }
         internal ICollection<ItadApiCategory> Categories { get; private set; }
         public event EventHandler InfoUpdate;
-        private readonly IsthereanydealCollectionSyncSettings settings;
+        private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
+        private IsthereanydealCollectionSyncSettings Settings { get => viewModel.Settings; }
         private readonly Database database;
         public Category Category { get; private set; }
 
@@ -24,7 +25,7 @@ namespace IsthereanydealCollectionSync
             this.plugin = plugin;
             InfoUpdate += settings.OnModelChanged;
             Api = new ItadApi(settings.Settings.Credential);
-            this.settings = settings.Settings;
+            viewModel = settings;
             database = Database.LoadOrInit(plugin);
 
             if (database.CategoryId != Guid.Empty)
@@ -132,7 +133,7 @@ namespace IsthereanydealCollectionSync
 
             Task<ICollection<string>> getWaitlistTask = null;
 
-            if (!settings.RemoveFromWaitlist)
+            if (!Settings.RemoveFromWaitlist)
             {
                 getWaitlistTask = Api.GetWaitlist();
             }
@@ -149,9 +150,9 @@ namespace IsthereanydealCollectionSync
             {
                 ItadShop? shop = ItadShopExtension.FromGameSource(game.Source);
 
-                if (settings.SkipSteam && shop == ItadShop.Steam ||
-                    settings.SkipGog && shop == ItadShop.Gog ||
-                    settings.SkipNoSource && shop is null)
+                if (Settings.SkipSteam && shop == ItadShop.Steam ||
+                    Settings.SkipGog && shop == ItadShop.Gog ||
+                    game.Source is null && Settings.SkipNoSource)
                 {
                     importResult.SkippedGames.Add(game);
                     continue;
@@ -173,8 +174,8 @@ namespace IsthereanydealCollectionSync
                         var toBeAddedCopy = new ItadApiAddCopyInput(gameItadId, false)
                         {
                             shop = shop,
-                            note = settings.Note,
-                            tags = settings.Tags,
+                            note = Settings.Note,
+                            tags = Settings.Tags,
                         };
 
                         toBeAddedCopies.Add(toBeAddedCopy);
@@ -183,7 +184,7 @@ namespace IsthereanydealCollectionSync
                         continue;
                     }
 
-                    if (settings.ImportMode == ImportMode.Skip)
+                    if (Settings.ImportMode == ImportMode.Skip)
                     {
                         importResult.SkippedGames.Add(game);
                         continue;
@@ -192,8 +193,8 @@ namespace IsthereanydealCollectionSync
                     var toBeUpdatedCopy = new ItadApiUpdateCopyInput(copy.id)
                     {
                         shop = shop,
-                        note = settings.Note,
-                        tags = settings.Tags,
+                        note = Settings.Note,
+                        tags = Settings.Tags,
                     };
 
                     toBeUpdatedCopies.Add(toBeUpdatedCopy);
@@ -221,7 +222,7 @@ namespace IsthereanydealCollectionSync
 
             var resultTask = Task.WhenAll(copiesTasks);
 
-            if (!settings.RemoveFromWaitlist && waitlist.HasItems())
+            if (!Settings.RemoveFromWaitlist && waitlist.HasItems())
             {
                 resultTask = resultTask.ContinueWith(async (task) =>
                 {

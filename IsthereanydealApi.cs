@@ -146,9 +146,18 @@ namespace IsthereanydealCollectionSync
         }
         public Shop shop;
 
+        /// <summary>
+        /// Compare this copy's shop and <paramref name="shop"/>
+        /// </summary>
+        /// <param name="shop"></param>
+        /// <returns>
+        /// True if shop matches or if it doesn't have a shop and <paramref name="shop"/> is null. Otherwise false.
+        /// </returns>
         public bool MatchShop(ItadShop? shop)
         {
-            return this.shop is null && shop is null || this?.shop.id == (int)shop;
+            return this.shop is null && shop is null ||
+                !(this.shop is null) && !(shop is null) &&
+                this?.shop.id == (int)shop;
         }
     }
 
@@ -182,13 +191,13 @@ namespace IsthereanydealCollectionSync
 
         public ItadApiUpdateCopyInput(int ItadCopyId)
         {
-            this.id = ItadCopyId;
+            id = ItadCopyId;
         }
     }
 
     // The number is shopId which was gotten from https://api.isthereanydeal.com/service/shops/v1
-    // It should be null for manually added
-    // games or games from unsupported stores.
+    // It should be null for library that cannot be mapped
+    // to ITAD shop.
     public enum ItadShop
     {
         Blizzard = 4,
@@ -208,7 +217,7 @@ namespace IsthereanydealCollectionSync
         /// Map GameSource to ItadShop.
         /// </summary>
         /// <param name="source"></param>
-        /// <returns>ItadShop or null if the mapping fails</returns>
+        /// <returns>ItadShop or null if source cannot map to shops on ITAD</returns>
         public static ItadShop? FromGameSource(GameSource source)
         {
             switch (source?.Name)
