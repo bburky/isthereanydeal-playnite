@@ -20,7 +20,8 @@ IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">跳過手動領取的遊戲 (i.e., doesn't have "Source" in game detail)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步被DuplicateHider隱藏的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">將Epic的遊戲標記為「已領取」</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">加入至IsThereAnyDeal收藏庫</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">匯入所有遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">加入至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">正在匯入{0}至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync錯誤</sys:String>
@@ -36,4 +37,6 @@ IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">{0}款遊戲匯入成功
 {1}款遊戲被跳過
 {2}款遊戲匯入失敗</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">同步時發生錯誤，請稍後再試。若錯誤尚未獲得改善，請回報。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">登入時發生錯誤，請再試一次。若錯誤尚未獲得改善，請回報。</sys:String>
 </ResourceDictionary>

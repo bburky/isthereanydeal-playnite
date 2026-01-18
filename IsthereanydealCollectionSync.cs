@@ -33,7 +33,7 @@ namespace IsthereanydealCollectionSync
             yield return new MainMenuItem
             {
                 MenuSection = "@" + Localized("LOCIsThereAnyDealCollectionSync"),
-                Description = "Import all games",
+                Description = Localized("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
                 Action = (itemArgs) =>
                 {
                     Import(PlayniteApi.Database.Games);
@@ -45,7 +45,7 @@ namespace IsthereanydealCollectionSync
         {
             yield return new GameMenuItem
             {
-                Description = Localized("LOCIsThereAnyDealCollectionSyncImportMenu"),
+                Description = Localized("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
                 Action = (itemArgs) =>
                 {
                     if (!(duplicateHider is null) && Settings.Settings.SyncDuplicateHider)
@@ -82,17 +82,17 @@ namespace IsthereanydealCollectionSync
             client.RemoveCategoryFromDatabase();
         }
 
-        public static string Localized(string key)
+        internal static string Localized(string key)
         {
             return ResourceProvider.GetString(key);
         }
 
-        public static string Localized(string key, params object[] args)
+        internal static string Localized(string key, params object[] args)
         {
             return string.Format(ResourceProvider.GetString(key), args);
         }
 
-        public List<Game> GetCopiesFromDuplicateHider(Game game)
+        internal List<Game> GetCopiesFromDuplicateHider(Game game)
         {
             if (duplicateHider is null)
             {
@@ -174,9 +174,9 @@ namespace IsthereanydealCollectionSync
 
                     PlayniteApi.Dialogs.ShowMessage(resultDialogText, ("LOCIsThereAnyDealCollectionSync"));
                 }
-                catch (Exception ex)
+                catch
                 {
-                    PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                    PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncImportError"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                 }
             }), new GlobalProgressOptions(dialogText));
         }

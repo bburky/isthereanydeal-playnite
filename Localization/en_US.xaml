@@ -20,7 +20,8 @@ set additional information during synchronization which this plugin is unable to
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Synchronize games hidden by DuplicateHider</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">Mark games from Epic Games Store as redeemed</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">Add to IsThereAnyDeal Collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Import all games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync Error</sys:String>
@@ -36,4 +37,6 @@ Log into IsThereAnyDeal in "Add-ons..." > settings</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">Added {0} games.
 Skipped {1} games.
 Failed to import {2} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">An error occurred during synchronization. Please try again later. If this keeps happening. Report it to the developers.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">An error occured during authentication. Please try again. If this keeps happening. Please report it to the developer.</sys:String>
 </ResourceDictionary>

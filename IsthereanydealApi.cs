@@ -17,7 +17,7 @@ namespace IsthereanydealCollectionSync
     class OauthCodeExchange
     {
         private readonly ILogger logger = LogManager.GetLogger();
-        private string State { get; }
+        private readonly string state;
         private readonly Pkce pkce;
         private string code;
         internal string LoginUrl { get; }
@@ -25,9 +25,9 @@ namespace IsthereanydealCollectionSync
         internal OauthCodeExchange()
         {
             pkce = new Pkce();
-            State = RandomString.GetUrlSafeString(32);
+            state = RandomString.GetUrlSafeString(32);
 
-            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={State}&scope=user_info coll_write coll_read wait_write wait_read";
+            LoginUrl = $"{HOST_URL}oauth/authorize/?client_id={CLIENT_ID}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}&response_type=code&code_challenge_method=S256&code_challenge={pkce.CodeChallenge}&state={state}&scope=user_info coll_write coll_read wait_write wait_read";
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace IsthereanydealCollectionSync
 
             var parts = url.Split('?');
 
-            if (parts is null || parts.Length != 2 || parts[0] != "https://isthereanydeal.com/")
+            if (parts is null || parts.Length != 2 || parts[0] != HOST_URL)
             {
                 return false;
             }
@@ -50,7 +50,7 @@ namespace IsthereanydealCollectionSync
             var queryParams = HttpUtility.ParseQueryString(parts[1]);
             var state = queryParams.Get("state");
 
-            if (State != state)
+            if (this.state != state)
             {
                 logger.Error("Redirect URL state mismatched");
 
@@ -64,11 +64,10 @@ namespace IsthereanydealCollectionSync
 
         async internal Task<ItadApi> GetTokens()
         {
-            logger.Debug("Getting OAuth tokens");
 
             if (code is null)
             {
-                throw new ITADException("OAuth code is null. Is the user authenticated?");
+                throw new ITADException("OAuth code is null");
             }
 
             var parameters = new Dictionary<string, string>
@@ -82,7 +81,7 @@ namespace IsthereanydealCollectionSync
 
             var content = new FormUrlEncodedContent(parameters);
 
-            HttpResponseMessage response = await ItadOauthConstants.Client.PostAsync($"{HOST_URL}oauth/token/", content);
+            HttpResponseMessage response = await Client.PostAsync($"{HOST_URL}oauth/token/", content);
 
             await ThrowOnBadHttpStatus(response);
 
@@ -247,7 +246,6 @@ namespace IsthereanydealCollectionSync
 
     public class ItadApi
     {
-        private readonly ILogger logger = LogManager.GetLogger();
         private ItadApiCredential credential;
         internal ItadApiCredential Credential => credential;
 

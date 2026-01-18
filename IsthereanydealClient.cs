@@ -79,7 +79,7 @@ namespace IsthereanydealCollectionSync
 
         private void LogInitError(string field, ITADException err)
         {
-            logger.Error(err, $"Failed to get {field}. User need to restart Code exchange.");
+            logger.Error(err, $"Failed to get {field}. User need to start Code exchange.");
         }
 
         public bool IsUserLoggedIn()
@@ -110,8 +110,8 @@ namespace IsthereanydealCollectionSync
                     catch (ITADException err)
                     {
                         webView.Close();
-                        plugin.PlayniteApi.Dialogs.ShowErrorMessage($"An error occured during authentication:\n{err.Message}", "Failed to authenticate IsThereAnyDeal");
-                        logger.Error(err, $"An error occured during authentication:\n{err.Message}");
+                        plugin.PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncAuthenticationError"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        logger.Error(err, $"Error in WebView during authentication:\n{err.Message}");
                     }
                 };
 
@@ -219,14 +219,14 @@ namespace IsthereanydealCollectionSync
             if (toBeAddedCopies.HasItems())
             {
                 var copyInput = toBeAddedCopies.ToArray();
-                var task = AddCopyAsync(copyInput);
+                var task = Api.AddCopies(copyInput);
                 copiesTasks.Add(task);
             }
 
             if (toBeUpdatedCopies.HasItems())
             {
                 var copyInput = toBeUpdatedCopies.ToArray();
-                var task = UpdateCopyAsync(copyInput);
+                var task = Api.UpdateCopies(toBeUpdatedCopies);
                 copiesTasks.Add(task);
             }
 
@@ -260,30 +260,6 @@ namespace IsthereanydealCollectionSync
             }
 
             return importResult;
-        }
-
-        async private Task AddCopyAsync(ICollection<ItadApiAddCopyInput> itadCopies)
-        {
-            try
-            {
-                await Api.AddCopies(itadCopies);
-            }
-            catch
-            {
-                throw new ITADException("Failed to add copy");
-            }
-        }
-
-        async private Task UpdateCopyAsync(ItadApiUpdateCopyInput[] itadCopies)
-        {
-            try
-            {
-                await Api.UpdateCopies(itadCopies);
-            }
-            catch
-            {
-                throw new ITADException("Failed to update copy");
-            }
         }
 
         //async public Task<ImportJSONGameCopy> getCopyForGame(Game game)
