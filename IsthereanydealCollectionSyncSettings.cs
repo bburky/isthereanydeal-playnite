@@ -9,9 +9,14 @@ namespace IsthereanydealCollectionSync
 {
     public class IsthereanydealCollectionSyncSettings : ObservableObject
     {
-        private ImportMode importMode = ImportMode.Ignore;
-        private bool removeFromWaitlist = false;
+        private ImportMode importMode = ImportMode.Skip;
+        private bool removeFromWaitlist = true;
         private bool redeemCollection = false;
+        private string[] tags;
+        private string note;
+        private bool skipSteam = true;
+        private bool skipGog = true;
+        private bool skipNoSource = false;
 
         public ImportMode ImportMode 
         { 
@@ -21,14 +26,11 @@ namespace IsthereanydealCollectionSync
 
         public ItadApiCredential Credential { get; set; }
 
-        private string[] tags;
         public string[] Tags
         {
             get => tags;
             set => SetValue(ref tags, value);
         }
-
-        private string note;
 
         public string Note {
             get => note;
@@ -47,12 +49,30 @@ namespace IsthereanydealCollectionSync
             set => SetValue(ref redeemCollection, value); 
         }
 
+        public bool SkipSteam
+        {
+            get => skipSteam;
+            set => SetValue(ref skipSteam, value);
+        }
+
+        public bool SkipGog
+        {
+            get => skipGog;
+            set => SetValue(ref skipGog, value);
+        }
+
+        public bool SkipNoSource
+        {
+            get => skipNoSource;
+            set => SetValue(ref skipNoSource, value);
+        }
+
         public int SelectedCategoryId { get; set; } = 0;
     }
 
     public enum ImportMode
     {
-        Ignore,
+        Skip,
         Replace,
     }
 

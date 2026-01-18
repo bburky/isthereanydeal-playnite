@@ -7,22 +7,33 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFreebie">Mark collections "redeemed" when they have been given away before</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove collection from Waitlist</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">When synchronizing games that are already collected</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeIgnore">Skip the game</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">Skip the game</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">Replace the game</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">Tags for collection separated by comma</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note for collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">Skip Steam games for synchronization</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip">This is useful if you have linked Steam account on IsThereAnyDeal, as IsThereAnyDeal will
+set additional information during synchronization which this plugin is unable to.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">Skip GOG games for synchronization</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">
+This is useful if you have linked GOG account on IsThereAnyDeal, as IsThereAnyDeal will
+set additional information during synchronization which this plugin is unable to.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">Add to IsThereAnyDeal Collection</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing games into IsThereAnyDeal collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync Error</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn" xml:space="preserve">You are not logged in.
 
 Log into IsThereAnyDeal in "Add-ons..." > settings</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">Successfully added {0} games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">All {0} games are added successfully</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">Successfully added {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">Failed to add {0} games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">Failed to add all {0} games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">Failed to add {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed">Successfully added {0} games.
-Failed to add {1} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">Skipped all {0} games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">Skipped {0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed">Added {0} games successfully.
+Skipped {1} games.
+Failed to import {2} games.</sys:String>
 </ResourceDictionary>

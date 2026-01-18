@@ -27,7 +27,7 @@ namespace IsthereanydealCollectionSync
             this.settings = settings.Settings;
             database = Database.LoadOrInit(plugin);
 
-            if (!(database.CategoryId == Guid.Empty))
+            if (database.CategoryId != Guid.Empty)
             {
                 try
                 {
@@ -124,7 +124,7 @@ namespace IsthereanydealCollectionSync
         /// </summary>
         /// <param name="games"></param>
         /// <returns>List of games that failed to synchronize.</returns>
-        async public Task<ICollection<Game>> Import(ICollection<Game> games)
+        async public Task<ImportResult> Import(ICollection<Game> games)
         {
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();
@@ -139,7 +139,7 @@ namespace IsthereanydealCollectionSync
 
             IDictionary<string, string> gameIds = await lookUpGameIdTask;
             ICollection<ItadApiCopy> existingCopies = await getCopiesTask;
-            var failedGames = new List<Game>();
+            var importResult = new ImportResult();
             var copiesTasks = new List<Task>();
             var toBeAddedCopies = new List<ItadApiAddCopyInput>();
             var toBeUpdatedCopies = new List<ItadApiUpdateCopyInput>();
@@ -148,6 +148,14 @@ namespace IsthereanydealCollectionSync
             foreach (Game game in games)
             {
                 ItadShop? shop = ItadShopExtension.FromGameSource(game.Source);
+
+                if (settings.SkipSteam && shop == ItadShop.Steam ||
+                    settings.SkipGog && shop == ItadShop.Gog ||
+                    settings.SkipNoSource && shop is null)
+                {
+                    importResult.SkippedGames.Add(game);
+                    continue;
+                }
 
                 if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
                 {
@@ -170,12 +178,14 @@ namespace IsthereanydealCollectionSync
                         };
 
                         toBeAddedCopies.Add(toBeAddedCopy);
+                        importResult.ImportedGames.Add(game);
 
                         continue;
                     }
 
-                    if (settings.ImportMode == ImportMode.Ignore)
+                    if (settings.ImportMode == ImportMode.Skip)
                     {
+                        importResult.SkippedGames.Add(game);
                         continue;
                     }
 
@@ -187,10 +197,11 @@ namespace IsthereanydealCollectionSync
                     };
 
                     toBeUpdatedCopies.Add(toBeUpdatedCopy);
+                    importResult.ImportedGames.Add(game);
                 }
                 else
                 {
-                    failedGames.Add(game);
+                    importResult.FailedGames.Add(game);
                 }
             }
 
@@ -214,7 +225,7 @@ namespace IsthereanydealCollectionSync
             {
                 resultTask = resultTask.ContinueWith(async (task) =>
                 {
-                    // ITAD removes games on collection, so
+                    // ITAD removes games upon collection, so
                     // re-adding them back
                     await Api.AddToWaitlist(waitlist);
                 }, TaskContinuationOptions.OnlyOnRanToCompletion).Unwrap();
@@ -222,7 +233,7 @@ namespace IsthereanydealCollectionSync
 
             await resultTask;
 
-            if (failedGames.HasItems())
+            if (importResult.FailedGames.HasItems())
             {
                 if (Category is null)
                 {
@@ -232,12 +243,12 @@ namespace IsthereanydealCollectionSync
                     plugin.PlayniteApi.Database.Categories.Add(Category);
                 }
 
-                foreach (var game in failedGames) {
+                foreach (var game in importResult.FailedGames) {
                     AddCategory(game);
                 }
             }
 
-            return failedGames;
+            return importResult;
         }
 
         async private Task AddCopyAsync(ICollection<ItadApiAddCopyInput> itadCopies)
@@ -403,5 +414,12 @@ namespace IsthereanydealCollectionSync
         {
             public ITADException(string message) : base(message) { }
         }
+    }
+
+    public class ImportResult
+    {
+        public ICollection<Game> FailedGames { get; set; } = new List<Game>();
+        public ICollection<Game> SkippedGames { get; set; } = new List<Game>();
+        public ICollection<Game> ImportedGames { get; set; } = new List<Game>();
     }
 }

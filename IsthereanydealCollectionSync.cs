@@ -80,7 +80,7 @@ namespace IsthereanydealCollectionSync
 
         private void Import(ICollection<Game> games)
         {
-            string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple");
+            string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
 
             if (games.Count == 1)
             {
@@ -99,17 +99,24 @@ namespace IsthereanydealCollectionSync
                         return;
                     }
 
-                    var failedGames = await client.Import(games);
+                    ImportResult importResult = await client.Import(games);
 
-                    var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
+
+                    var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
+                        importResult.SkippedGames,
+                        importResult.FailedGames.Count); 
 
                     if (games.Count == 1)
                     {
                         var game = games.First();
 
-                        if (failedGames.HasItems())
+                        if (importResult.FailedGames.HasItems())
                         {
                             resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", game.Name);
+                        }
+                        else if (importResult.SkippedGames.HasItems())
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedSingle", game.Name);
                         }
                         else
                         {
@@ -118,13 +125,17 @@ namespace IsthereanydealCollectionSync
                     }
                     else
                     {
-                        if (failedGames.Count == games.Count)
+                        if (importResult.FailedGames.Count == games.Count)
                         {
                             resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", games.Count);
                         }
-                        else if (failedGames.HasItems())
+                        else if (importResult.SkippedGames.Count == games.Count)
                         {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", games.Count - failedGames.Count, failedGames.Count);
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedMultiple", games.Count);
+                        }
+                        else if (importResult.ImportedGames.Count == games.Count)
+                        {
+                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
                         }
                     }
 
