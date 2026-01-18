@@ -118,15 +118,6 @@ namespace IsthereanydealCollectionSync
         public string username;
     }
 
-    public class ItadApiCategory : ObservableObject
-    {
-#pragma warning disable IDE1006 // Naming Styles
-        public int id { get; set; }
-        public string title { get; set; }
-        public bool @public { get; set; }
-#pragma warning restore IDE1006 // Naming Styles
-    }
-
     // https://docs.isthereanydeal.com/#tag/Collection-Copies/operation/collection-copies-v1-get
     public class ItadApiCopy
     {
@@ -280,24 +271,6 @@ namespace IsthereanydealCollectionSync
             var userInfo = await TryParse<ItadApiUserInfo>(response, "Failed to parse user info");
 
             return userInfo.username;
-        }
-
-        internal async Task<ICollection<ItadApiCategory>> GetCategories()
-        {
-            var response = await GetAsync($"{API_URL}collection/groups/v1");
-            await ThrowOnBadHttpStatus(response);
-            var categories = await TryParse<ItadApiCategory[]>(response, "Failed to parse categories");
-
-            return categories;
-        }
-
-        internal async Task<ItadApiCategory> CreateCategory(string title, bool isPublic = false)
-        {
-            var response = await PostAsync($"{API_URL}collection/groups/v1");
-            await ThrowOnBadHttpStatus(response);
-            var category = await TryParse<ItadApiCategory>(response, "Failed to parse category");
-
-            return category;
         }
 
         /// <summary>

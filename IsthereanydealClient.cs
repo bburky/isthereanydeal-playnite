@@ -13,8 +13,6 @@ namespace IsthereanydealCollectionSync
         private readonly IsthereanydealCollectionSync plugin;
         public ItadApi Api { get; private set; }
         internal string Username { get; private set; }
-        internal ICollection<ItadApiCategory> Categories { get; private set; }
-        public event EventHandler InfoUpdate;
         private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
         private IsthereanydealCollectionSyncSettings Settings { get => viewModel.Settings; }
         private readonly Database database;
@@ -23,7 +21,6 @@ namespace IsthereanydealCollectionSync
         public IsthereanydealClient(IsthereanydealCollectionSync plugin, IsthereanydealCollectionSyncSettingsViewModel settings)
         {
             this.plugin = plugin;
-            InfoUpdate += settings.OnModelChanged;
             Api = new ItadApi(settings.Settings.Credential);
             viewModel = settings;
             database = Database.LoadOrInit(plugin);
@@ -40,15 +37,7 @@ namespace IsthereanydealCollectionSync
                 }
             }
 
-            Task.WhenAll(
-                InitUsername(), InitCategories()
-            ).ContinueWith((task) =>
-            {
-                if (!(task.Exception is null))
-                {
-                    InfoUpdate?.Invoke(this, EventArgs.Empty);
-                }
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            _ = InitUsername();
         }
 
         private async Task InitUsername()
@@ -58,28 +47,10 @@ namespace IsthereanydealCollectionSync
                 Username = await Api.GetUsername();
                 logger.Info($"Logged in as {Username}");
             }
-            catch (ITADException err)
+            catch (ITADException e)
             {
-                LogInitError("username", err);
+                logger.Error(e, $"Failed to get username");
             }
-        }
-
-        private async Task InitCategories()
-        {
-            try
-            {
-                Categories = await Api.GetCategories();
-                logger.Info($"Found {Categories.Count()} categories");
-            }
-            catch (ITADException err)
-            {
-                LogInitError("categories", err);
-            }
-        }
-
-        private void LogInitError(string field, ITADException err)
-        {
-            logger.Error(err, $"Failed to get {field}. User need to start Code exchange.");
         }
 
         public bool IsUserLoggedIn()
@@ -102,8 +73,6 @@ namespace IsthereanydealCollectionSync
                         {
                             Api = await oauth.GetTokens();
                             Username = await Api.GetUsername();
-                            Categories = await Api.GetCategories();
-                            InfoUpdate?.Invoke(this, EventArgs.Empty);
                             webView.Close();
                         }
                     }

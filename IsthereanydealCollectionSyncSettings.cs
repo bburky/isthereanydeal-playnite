@@ -84,17 +84,9 @@ namespace IsthereanydealCollectionSync
     public class IsthereanydealCollectionSyncSettingsViewModel : ObservableObject, ISettings
     {
         private readonly IsthereanydealCollectionSync plugin;
-        private IsthereanydealCollectionSyncSettings editingClone { get; set; }
-
-        public ObservableCollection<ItadApiCategory> Categories
-        {
-            get; 
-            private set;
-        } = new ObservableCollection<ItadApiCategory>();
-
-        private static object _lock = new object();
-
+        private IsthereanydealCollectionSyncSettings editingClone;
         private IsthereanydealCollectionSyncSettings settings;
+
         public IsthereanydealCollectionSyncSettings Settings
         {
             get => settings;
@@ -117,8 +109,6 @@ namespace IsthereanydealCollectionSync
             {
                 Settings = new IsthereanydealCollectionSyncSettings();
             }
-
-            BindingOperations.EnableCollectionSynchronization(Categories, _lock);
         }
 
         public string PluginPath => plugin.GetPluginUserDataPath();
@@ -131,16 +121,6 @@ namespace IsthereanydealCollectionSync
             {
                 plugin.client.Login();
             });
-        }
-
-        public void OnModelChanged(object sender, EventArgs args)
-        {
-            Categories.Clear();
-
-            foreach (var cat in plugin.client.Categories)
-            {
-                Categories.Add(cat);
-            }
         }
 
         public void BeginEdit()
