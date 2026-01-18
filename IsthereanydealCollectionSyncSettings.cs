@@ -11,13 +11,13 @@ namespace IsthereanydealCollectionSync
     {
         private ImportMode importMode = ImportMode.Skip;
         private bool removeFromWaitlist = true;
-        private bool redeemCollection = false;
         private string[] tags;
         private string note;
         private bool skipSteam = true;
         private bool skipGog = true;
         private bool skipNoSource = false;
         private bool syncDuplicateHider = true;
+        private bool redeemEpic = false;
 
         public ImportMode ImportMode 
         { 
@@ -44,12 +44,6 @@ namespace IsthereanydealCollectionSync
             set => SetValue(ref removeFromWaitlist, value); 
         }
 
-        public bool RedeemCollection 
-        { 
-            get => redeemCollection;
-            set => SetValue(ref redeemCollection, value); 
-        }
-
         public bool SkipSteam
         {
             get => skipSteam;
@@ -74,7 +68,11 @@ namespace IsthereanydealCollectionSync
             set => SetValue(ref syncDuplicateHider, value);
         }
 
-        public int SelectedCategoryId { get; set; } = 0;
+        public bool RedeemEpic
+        {
+            get => redeemEpic;
+            set => SetValue(ref redeemEpic, value);
+        }
     }
 
     public enum ImportMode

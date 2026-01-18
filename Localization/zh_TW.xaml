@@ -4,21 +4,22 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">你好{0}！</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFreebie">將曾經為限時免費的遊戲標記為「已領取」</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">在Waitlist中移除已匯入的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">若匯入的遊戲已經在收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">跳過該遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">取代該遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">匯入的遊戲的標籤，以半形逗號 「,」 隔開</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">例如: tag1,tag2,tag3</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">匯入的遊戲的筆記</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">在Waitlist中移除已匯入的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">同步時跳過Steam遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結Steam帳號，
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">同步時跳過GOG遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結GOG帳號，
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">跳過手動領取的遊戲 (i.e., doesn't have "Source" in game detail)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步被DuplicateHider隱藏的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">將Epic的遊戲標記為「已領取」</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMenu">加入至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">正在匯入{0}至IsThereAnyDeal收藏庫</sys:String>

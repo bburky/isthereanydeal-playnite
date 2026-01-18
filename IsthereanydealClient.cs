@@ -178,6 +178,11 @@ namespace IsthereanydealCollectionSync
                             tags = Settings.Tags,
                         };
 
+                        if (shop == ItadShop.Epic)
+                        {
+                            toBeAddedCopy.redeemed = Settings.RedeemEpic;
+                        }
+
                         toBeAddedCopies.Add(toBeAddedCopy);
                         importResult.ImportedGames.Add(game);
 
@@ -196,6 +201,11 @@ namespace IsthereanydealCollectionSync
                         note = Settings.Note,
                         tags = Settings.Tags,
                     };
+
+                    if (shop == ItadShop.Epic)
+                    {
+                        toBeUpdatedCopy.redeemed = Settings.RedeemEpic;
+                    }
 
                     toBeUpdatedCopies.Add(toBeUpdatedCopy);
                     importResult.ImportedGames.Add(game);
