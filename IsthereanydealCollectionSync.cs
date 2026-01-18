@@ -79,14 +79,21 @@ namespace IsthereanydealCollectionSync
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
         {
+            if (client.Database.CategoryId != Guid.Empty)
+            {
+                try
+                {
+                    PlayniteApi.Database.Categories.Remove(client.Database.CategoryId);
+                }
+                catch
+                {
+
+                }
+            }
+
             var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");
 
             duplicateHider = PlayniteApi.Addons.Plugins.FirstOrDefault(p => p.Id == duplicateHiderGuid);
-        }
-
-        public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
-        {
-            client.RemoveCategoryFromDatabase();
         }
 
         internal static string Localized(string key)
@@ -97,6 +104,53 @@ namespace IsthereanydealCollectionSync
         internal static string Localized(string key, params object[] args)
         {
             return string.Format(ResourceProvider.GetString(key), args);
+        }
+
+        // You need to check IPlayniteAPI.Database.Categories
+        // has the category before calling it.
+        internal static void AddCategory(Game game, Category category)
+        {
+            if (game.CategoryIds is null)
+            {
+                game.CategoryIds = new List<Guid> { category.Id };
+            }
+            else
+            {
+                game.CategoryIds.AddMissing(category.Id);
+            }
+        }
+
+        internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Category category)
+        {
+            if (category is null)
+            {
+                return;
+            }
+
+            // IntelliSense IS LYING!
+            // If you try to remove thing that is not
+            // in the collection, it throws
+            // NullReferenceException.
+            try
+            {
+                api.Database.Categories.Remove(category);
+            }
+            catch
+            {
+
+            }
+        }
+
+        internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Guid id)
+        {
+            try
+            {
+                api.Database.Categories.Remove(id);
+            }
+            catch
+            {
+
+            }
         }
 
         internal List<Game> GetCopiesFromDuplicateHider(Game game)

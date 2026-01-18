@@ -1,40 +1,42 @@
-using System;
-using System.IO;
 using Playnite.SDK.Data;
 using Playnite.SDK.Plugins;
+using System;
+using System.IO;
+using System.Text;
 
 namespace IsthereanydealCollectionSync
 {
 	public class Database
 	{
+        public string CategoryName { get; set; } = "_IsThereAnyDealCollectionSync_FailedGame";
+        public Guid CategoryId { get; set; }
+    }
+
+    public class DatabaseProxy
+    {
         private const string FILENAME = "IsThereAnyDealCollectionSyncDatabase.json";
-        private string filePath;
+        private readonly string filePath;
+        public Database Database { get; private set; }
 
-		public string CategoryName = "_IsThereAnyDealCollectionSync_FailedGame";
-        public Guid CategoryId;
-
-        private Database(Plugin plugin, string filePath)
+        private DatabaseProxy(string filePath)
         {
             this.filePath = filePath;
         }
 
-        public static Database LoadOrInit(Plugin plugin)
+        public static DatabaseProxy LoadOrInit(Plugin plugin)
         {
             string filePath = Path.Combine(plugin.GetPluginUserDataPath(), FILENAME);
+            Serialization.TryFromJsonFile(filePath, out Database database);
 
-            if (Serialization.TryFromJsonFile(filePath, out Database db))
+            return new DatabaseProxy(filePath)
             {
-                return db;
-            }
-            else
-            {
-                return new Database(plugin, filePath);
-            }
+                Database = database
+            };
         }
 
         public void Save()
         {
-            File.WriteAllText(filePath, Serialization.ToJson(this));
+            File.WriteAllText(filePath, Serialization.ToJson(Database), Encoding.UTF8);
         }
     }
 }

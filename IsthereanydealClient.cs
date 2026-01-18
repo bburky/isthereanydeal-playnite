@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync
 {
+    using static IsthereanydealCollectionSync;
     public class IsthereanydealClient
     {
         private static readonly ILogger logger = LogManager.GetLogger();
@@ -15,27 +16,16 @@ namespace IsthereanydealCollectionSync
         internal string Username { get; private set; }
         private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
         private IsthereanydealCollectionSyncSettings Settings { get => viewModel.Settings; }
-        private readonly Database database;
-        public Category Category { get; private set; }
+        private DatabaseProxy DatabaseProxy { get; }
+        internal Database Database { get => DatabaseProxy.Database; }
+        internal Category Category { get; private set; }
 
         public IsthereanydealClient(IsthereanydealCollectionSync plugin, IsthereanydealCollectionSyncSettingsViewModel settings)
         {
             this.plugin = plugin;
             Api = new ItadApi(settings.Settings.Credential);
             viewModel = settings;
-            database = Database.LoadOrInit(plugin);
-
-            if (database.CategoryId != Guid.Empty)
-            {
-                try
-                {
-                    plugin.PlayniteApi.Database.Categories.Remove(database.CategoryId);
-                }
-                catch
-                {
-
-                }
-            }
+            DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
 
             _ = InitUsername();
         }
@@ -98,7 +88,7 @@ namespace IsthereanydealCollectionSync
         {
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();
-            RemoveCategoryFromDatabase();
+            RemoveCategoryFromDatabase(plugin.PlayniteApi, Category);
 
             Task<ICollection<string>> getWaitlistTask = null;
 
@@ -213,14 +203,18 @@ namespace IsthereanydealCollectionSync
             {
                 if (Category is null)
                 {
-                    Category = new Category(database.CategoryName);
-                    database.CategoryId = Category.Id;
-                    _ = Task.Run(database.Save);
+                    Category = new Category(Database.CategoryName);
+                    Database.CategoryId = Category.Id;
+                    _ = Task.Run(DatabaseProxy.Save);
+                }
+
+                if (!plugin.PlayniteApi.Database.Categories.Contains(Category))
+                {
                     plugin.PlayniteApi.Database.Categories.Add(Category);
                 }
 
                 foreach (var game in importResult.FailedGames) {
-                    AddCategory(game);
+                    AddCategory(game, Category);
                 }
             }
 
@@ -328,39 +322,6 @@ namespace IsthereanydealCollectionSync
         //        redeemed = true,
         //    };
         // }
-
-        public void AddCategory(Game game)
-        {
-            if (game.CategoryIds is null)
-            {
-                game.CategoryIds = new List<Guid> { Category.Id };
-            }
-            else
-            {
-                game.CategoryIds.AddMissing(Category.Id);
-            }
-        }
-
-        public void RemoveCategoryFromDatabase()
-        {
-            if (Category is null)
-            {
-                return;
-            }
-
-            // IntelliSense IS LYING!
-            // If you try to remove thing that is not
-            // in the collection, it throws
-            // NullReferenceException.
-            try
-            {
-                plugin.PlayniteApi.Database.Categories.Remove(Category);
-            }
-            catch
-            {
-
-            }
-        }
     }
 
     public class ImportResult
