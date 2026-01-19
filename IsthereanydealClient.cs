@@ -10,6 +10,8 @@ namespace IsthereanydealCollectionSync
     using static IsthereanydealCollectionSync;
     public class IsthereanydealClient
     {
+        public event EventHandler OnAuthenticated;
+
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSync plugin;
         public ItadApi Api { get; private set; }
@@ -27,6 +29,8 @@ namespace IsthereanydealCollectionSync
             viewModel = settings;
             DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
 
+            OnAuthenticated += (s, e) => viewModel.OnPropertyChanged(nameof(viewModel.IsUserLoggedIn));
+
             _ = InitUsername();
         }
 
@@ -36,6 +40,8 @@ namespace IsthereanydealCollectionSync
             {
                 Username = await Api.GetUsername();
                 logger.Info($"Logged in as {Username}");
+
+                OnAuthenticated?.Invoke(this, EventArgs.Empty);
             }
             catch (ITADException e)
             {
@@ -63,6 +69,7 @@ namespace IsthereanydealCollectionSync
                         {
                             Api = await oauth.GetTokens();
                             Username = await Api.GetUsername();
+                            OnAuthenticated?.Invoke(this, EventArgs.Empty);
                             webView.Close();
                         }
                     }

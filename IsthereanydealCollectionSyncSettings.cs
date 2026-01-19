@@ -122,8 +122,6 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        public string PluginPath => plugin.GetPluginUserDataPath();
-
         public bool IsUserLoggedIn => plugin.client.IsUserLoggedIn();
 
         public RelayCommand<object> LoginCommand
