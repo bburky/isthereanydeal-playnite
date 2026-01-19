@@ -4,41 +4,42 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">Hello {0}!</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">When synchronizing games that are already collected</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">Skip the game</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">Replace the game</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">Tags for collection separated by comma</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">For games already collected:</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">Skip</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">Replace</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">Tags (separated by comma)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note for collection</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove collection from Waitlist</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">Skip Steam games for synchronization</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">This is useful if you have linked Steam account on IsThereAnyDeal, as IsThereAnyDeal will
-set additional information during synchronization which this plugin is unable to.</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">Skip GOG games for synchronization</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">This is useful if you have linked GOG account on IsThereAnyDeal, as IsThereAnyDeal will
-set additional information during synchronization which this plugin is unable to.</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., doesn't have "Source" in game detail)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove from Waitlist after sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">Skip Steam games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">Recommended if your Steam account is linked to IsThereAnyDeal.
+ITAD can sync additional data that this addon cannot.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">Skip GOG games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">Recommended if your GOG account is linked to IsThereAnyDeal.
+ITAD can sync additional data that this addon cannot.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., "Source" is not set)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">Mark games from Epic Games Store as redeemed</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Synchronize games hidden by DuplicateHider</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Synchronize hidden games</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to failed synchronized games</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Import all games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Sync games hidden by DuplicateHider</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to games that are failed to sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Add all games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">Successfully added {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">Successfully added {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">Failed to add {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">Failed to add {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">Skipped {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">Skipped {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">Added: {0}
+Skipped: {1}
+Failed: {2}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync Error</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn" xml:space="preserve">You are not logged in.
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
+            xml:space="preserve">You are not logged in.
 
-Log into IsThereAnyDeal in "Add-ons..." > settings</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">All {0} games are added successfully</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">Successfully added {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">Failed to add all {0} games</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">Failed to add {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">Skipped all {0} games</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">Skipped {0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">Added {0} games.
-Skipped {1} games.
-Failed to import {2} games.</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">An error occurred during synchronization. Please try again later. If this keeps happening. Report it to the developers.</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">An error occured during authentication. Please try again. If this keeps happening. Please report it to the developer.</sys:String>
+Please log into IsThereAnyDeal in "Add-ons..." settings</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">An error occurred during synchronization. Please try again later. If the issue persists, please report it to the developers.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">An error occurred during authentication. Please try again. If the issue persists, please report it to the developer.</sys:String>
 </ResourceDictionary>

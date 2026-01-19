@@ -3,42 +3,43 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">你好{0}！</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">若匯入的遊戲已經在收藏庫</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">跳過該遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">你好，{0}！</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">若同步的遊戲已在收藏庫：</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">略過該遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">取代該遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">匯入的遊戲的標籤，以半形逗號 「,」 隔開</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">標籤（以半形逗號 「,」 分隔）</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">例如: tag1,tag2,tag3</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">匯入的遊戲的筆記</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">在Waitlist中移除已匯入的遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">同步時跳過Steam遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結Steam帳號，
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">筆記</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">同步後將遊戲從Waitlist移除</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteam">略過Steam遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipSteamToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結Steam帳號，建議勾選此項。
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">同步時跳過GOG遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結GOG帳號，
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGog">略過GOG遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipGogToolTip" xml:space="preserve">若您在IsThereAnyDeal上有連結GOG帳號，建議勾選此項。
 IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外的收藏資訊</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">跳過手動領取的遊戲 (i.e., doesn't have "Source" in game detail)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">略過手動新增的遊戲（即沒有標記來源）</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">將Epic的遊戲標記為「已領取」</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步被DuplicateHider隱藏的遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步被隱藏的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步隱藏的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">過濾同步失敗的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">匯入所有遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">加入至IsThereAnyDeal收藏庫</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">正在匯入{0}至IsThereAnyDeal收藏庫</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">匯入至IsThereAnyDeal收藏庫</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">正在匯入{0}至IsThereAnyDeal收藏庫...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">成功匯入{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">成功匯入{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">無法匯入{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">無法匯入{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">跳過{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">跳過{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">成功：{0}
+跳過：{1}
+失敗：{2}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync錯誤</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn" xml:space="preserve">您尚未登入
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
+            xml:space="preserve">您尚未登入
 
 請從「附加元件...」 > 「擴充功能設定」 > 「通用」 > 「IsThereAnyDeal Collection Sync」登入</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">成功匯入所有{0}款遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">成功匯入{0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">無法匯入所有的0}款遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">無法匯入{0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">跳過所有{0}遊戲</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">跳過{0}</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">{0}款遊戲匯入成功
-{1}款遊戲被跳過
-{2}款遊戲匯入失敗</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">同步時發生錯誤，請稍後再試。若錯誤尚未獲得改善，請回報。</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">登入時發生錯誤，請再試一次。若錯誤尚未獲得改善，請回報。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">同步時發生錯誤，請稍後再試。若問題持續發生，請向開發者回報。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">登入時發生錯誤，請稍後再試。若問題持續發生，請向開發者回報。</sys:String>
 </ResourceDictionary>
