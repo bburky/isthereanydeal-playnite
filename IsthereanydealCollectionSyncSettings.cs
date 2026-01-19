@@ -94,6 +94,7 @@ namespace IsthereanydealCollectionSync
 
     public class IsthereanydealCollectionSyncSettingsViewModel : ObservableObject, ISettings
     {
+        private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSync plugin;
         private IsthereanydealCollectionSyncSettings editingClone;
         private IsthereanydealCollectionSyncSettings settings;
@@ -111,15 +112,19 @@ namespace IsthereanydealCollectionSync
         public IsthereanydealCollectionSyncSettingsViewModel(IsthereanydealCollectionSync plugin)
         {
             this.plugin = plugin;
+
             var savedSettings = plugin.LoadPluginSettings<IsthereanydealCollectionSyncSettings>();
-            if (savedSettings != null)
+            if (!(savedSettings is null))
             {
                 Settings = savedSettings;
             }
             else
             {
                 Settings = new IsthereanydealCollectionSyncSettings();
+                logger.Warn("No settings found or not loaded. Created new one.");
             }
+
+            logger.Debug("ViewModel is initialized");
         }
 
         public bool IsUserLoggedIn => plugin.client.IsUserLoggedIn();

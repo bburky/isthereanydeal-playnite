@@ -32,20 +32,21 @@ namespace IsthereanydealCollectionSync
             OnAuthenticated += (s, e) => viewModel.OnPropertyChanged(nameof(viewModel.IsUserLoggedIn));
 
             _ = InitUsername();
+            logger.Debug("Client initialized");
         }
 
         private async Task InitUsername()
         {
             try
             {
+                logger.Info("Getting username");
                 Username = await Api.GetUsername();
-                logger.Info($"Logged in as {Username}");
 
                 OnAuthenticated?.Invoke(this, EventArgs.Empty);
             }
-            catch (ITADException e)
+            catch (ITADException ex)
             {
-                logger.Error(e, $"Failed to get username");
+                logger.Error(ex, $"Failed to get username");
             }
         }
 
@@ -56,12 +57,14 @@ namespace IsthereanydealCollectionSync
 
         public void Login()
         {
+            logger.Info("Start login");
             var oauth = new OauthCodeExchange();
             using (var webView = plugin.PlayniteApi.WebViews.CreateView(500, 700))
             {
                 webView.LoadingChanged += async (s, e) =>
                 {
                     string address = webView.GetCurrentAddress();
+                    logger.Debug($"WebView: \"{address}\"");
 
                     try
                     {
@@ -77,7 +80,7 @@ namespace IsthereanydealCollectionSync
                     {
                         webView.Close();
                         plugin.PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncAuthenticationError"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                        logger.Error(err, $"Error in WebView during authentication:\n{err.Message}");
+                        logger.Error(err, $"Error in WebView during authentication");
                     }
                 };
 
@@ -93,6 +96,7 @@ namespace IsthereanydealCollectionSync
         /// <returns>List of games that failed to synchronize.</returns>
         async public Task<ImportResult> Import(ICollection<Game> games)
         {
+            logger.Info($"Importing {games.Count} games");
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();
             RemoveCategoryFromDatabase(plugin.PlayniteApi, Category);
@@ -101,6 +105,7 @@ namespace IsthereanydealCollectionSync
 
             if (!Settings.RemoveFromWaitlist)
             {
+                logger.Info($"Plan to remove games from waitlist");
                 getWaitlistTask = Api.GetWaitlist();
             }
 
@@ -115,6 +120,9 @@ namespace IsthereanydealCollectionSync
             foreach (Game game in games)
             {
                 ItadShop? shop = ItadShopExtension.FromGameSource(game.Source);
+                
+                string loggerEntry = $"{game.Name}/{game.Source}/{shop?.ToString() ?? "null"}";
+                logger.Debug(loggerEntry);
 
                 if (Settings.SkipSteam && shop == ItadShop.Steam ||
                     Settings.SkipGog && shop == ItadShop.Gog ||
@@ -126,6 +134,8 @@ namespace IsthereanydealCollectionSync
 
                 if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
                 {
+                    logger.Debug($"{loggerEntry}/{gameItadId}");
+
                     var copy = existingCopies
                         .Where(c =>
                             c.game.id == gameItadId &&
@@ -182,13 +192,17 @@ namespace IsthereanydealCollectionSync
                 }
             }
 
+            logger.Info($"Imported({importResult.ImportedGames.Count})\nSkipped({importResult.SkippedGames.Count})\nFailed({importResult.FailedGames})");
+
             if (toBeAddedCopies.HasItems())
             {
+                logger.Info("Plan to add copy");
                 copiesTasks.Add(Api.AddCopies(toBeAddedCopies));
             }
 
             if (toBeUpdatedCopies.HasItems())
             {
+                logger.Info("Plan to update copy");
                 copiesTasks.Add(Api.UpdateCopies(toBeUpdatedCopies));
             }
 
@@ -200,18 +214,23 @@ namespace IsthereanydealCollectionSync
                 {
                     // ITAD removes games upon collection, so
                     // re-adding them back
+                    logger.Info("Removing games from waitlist");
                     await Api.AddToWaitlist(waitlist);
                 }, TaskContinuationOptions.OnlyOnRanToCompletion).Unwrap();
             }
 
             await resultTask;
+            logger.Info("Completed import web requests");
 
             if (importResult.FailedGames.HasItems())
             {
                 if (Settings.FilterFaileds)
                 {
+                    logger.Info($"Start applying category to failed games");
+
                     if (Category is null)
                     {
+                        logger.Info("Creating new category");
                         Category = new Category(Database.CategoryName);
                         Database.CategoryId = Category.Id;
                         _ = Task.Run(DatabaseProxy.Save);
@@ -219,15 +238,16 @@ namespace IsthereanydealCollectionSync
 
                     if (!plugin.PlayniteApi.Database.Categories.Contains(Category))
                     {
-                        plugin.PlayniteApi.Database.Categories.Add(Category);
+                        logger.Info("Adding category to Playnite"); plugin.PlayniteApi.Database.Categories.Add(Category);
                     }
-                }
 
-                foreach (var game in importResult.FailedGames) {
-                    AddCategory(game, Category);
+                    foreach (var game in importResult.FailedGames) {
+                        AddCategory(game, Category);
+                    }
                 }
             }
 
+            logger.Info("Completed Import");
             return importResult;
         }
 

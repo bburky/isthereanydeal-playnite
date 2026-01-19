@@ -26,6 +26,7 @@ namespace IsthereanydealCollectionSync
                 HasSettings = true
             };
             client = new IsthereanydealClient(this, Settings);
+            logger.Info("Completed plugin initialization");
         }
 
         public override IEnumerable<MainMenuItem> GetMainMenuItems(GetMainMenuItemsArgs args)
@@ -36,14 +37,16 @@ namespace IsthereanydealCollectionSync
                 Description = Localized("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
                 Action = (itemArgs) =>
                 {
-                    if (!Settings.Settings.SyncHidden)
+                    ICollection<Game> games = PlayniteApi.Database.Games;
+                    var syncHidden = Settings.Settings.SyncHidden;
+
+                    if (!syncHidden)
                     {
-                        var games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
-                        Import(games);
-                    } else
-                    {
-                        Import(PlayniteApi.Database.Games);
+                        games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
                     }
+
+                    logger.Info($"Start importing games from MainMenu (SyncHidden: {syncHidden})");
+                    Import(games);
                 }
             };
         }
@@ -55,7 +58,11 @@ namespace IsthereanydealCollectionSync
                 Description = Localized("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
                 Action = (itemArgs) =>
                 {
-                    if (!(duplicateHider is null) && Settings.Settings.SyncDuplicateHider)
+                    var hasDh = !(duplicateHider is null);
+                    var syncDh = Settings.Settings.SyncDuplicateHider;
+                    logger.Info($"Start importing games from GameMenu (DH: {hasDh}, SyncDH: {syncDh})");
+
+                    if (hasDh && syncDh)
                     {
                         Import(itemArgs.Games.SelectMany(GetCopiesFromDuplicateHider).ToArray());
                     }
@@ -83,6 +90,7 @@ namespace IsthereanydealCollectionSync
             {
                 try
                 {
+                    logger.Info("Remove category");
                     PlayniteApi.Database.Categories.Remove(client.Database.CategoryId);
                 }
                 catch
@@ -94,6 +102,11 @@ namespace IsthereanydealCollectionSync
             var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");
 
             duplicateHider = PlayniteApi.Addons.Plugins.FirstOrDefault(p => p.Id == duplicateHiderGuid);
+
+            if (!(duplicateHider is null))
+            {
+                logger.Info("Detected DuplicateHider");
+            }
         }
 
         internal static string Localized(string key)
@@ -122,6 +135,8 @@ namespace IsthereanydealCollectionSync
 
         internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Category category)
         {
+            logger.Info("Remove category from playnite (Category)");
+
             if (category is null)
             {
                 return;
@@ -143,6 +158,8 @@ namespace IsthereanydealCollectionSync
 
         internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Guid id)
         {
+            logger.Info("Remove category from playnite (Guid)");
+
             try
             {
                 api.Database.Categories.Remove(id);
@@ -189,6 +206,7 @@ namespace IsthereanydealCollectionSync
 
                     if (!client.IsUserLoggedIn())
                     {
+                        logger.Info("User not logged in. Stop import.");
                         PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                         return;
                     }
@@ -197,7 +215,7 @@ namespace IsthereanydealCollectionSync
 
                     var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
                         importResult.SkippedGames.Count,
-                        importResult.FailedGames.Count); 
+                        importResult.FailedGames.Count);
 
                     if (games.Count == 1)
                     {
@@ -238,15 +256,21 @@ namespace IsthereanydealCollectionSync
                     {
                         PlayniteApi.MainView.UIDispatcher.Invoke(() =>
                         {
-                            FilterPreset preset = new FilterPreset();
-                            preset.Settings = new FilterPresetSettings();
-                            preset.Settings.Category = new IdItemFilterItemProperties(client.Category.Id);
+                            logger.Info("Filtering failed-to-sync games");
+                            FilterPreset preset = new FilterPreset
+                            {
+                                Settings = new FilterPresetSettings
+                                {
+                                    Category = new IdItemFilterItemProperties(client.Category.Id)
+                                }
+                            };
                             PlayniteApi.MainView.ApplyFilterPreset(preset);
                         });
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    logger.Error(ex, "Import failed");
                     PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncImportError"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                 }
             }), new GlobalProgressOptions(dialogText));

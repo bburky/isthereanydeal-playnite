@@ -1,3 +1,4 @@
+using Playnite.SDK;
 using Playnite.SDK.Data;
 using Playnite.SDK.Plugins;
 using System;
@@ -15,6 +16,7 @@ namespace IsthereanydealCollectionSync
 
     public class DatabaseProxy
     {
+        private static ILogger logger = LogManager.GetLogger();
         private const string FILENAME = "IsThereAnyDealCollectionSyncDatabase.json";
         private readonly string filePath;
         public Database Database { get; private set; }
@@ -27,7 +29,10 @@ namespace IsthereanydealCollectionSync
         public static DatabaseProxy LoadOrInit(Plugin plugin)
         {
             string filePath = Path.Combine(plugin.GetPluginUserDataPath(), FILENAME);
-            Serialization.TryFromJsonFile(filePath, out Database database);
+            if (!Serialization.TryFromJsonFile(filePath, out Database database))
+            {
+                logger.Warn("Failed to deserialize database. Creating new one.");
+            }
 
             return new DatabaseProxy(filePath)
             {
@@ -37,6 +42,7 @@ namespace IsthereanydealCollectionSync
 
         public void Save()
         {
+            logger.Info("Save database");
             File.WriteAllText(filePath, Serialization.ToJson(Database), Encoding.UTF8);
         }
     }
