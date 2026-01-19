@@ -201,16 +201,19 @@ namespace IsthereanydealCollectionSync
 
             if (importResult.FailedGames.HasItems())
             {
-                if (Category is null)
+                if (Settings.FilterFaileds)
                 {
-                    Category = new Category(Database.CategoryName);
-                    Database.CategoryId = Category.Id;
-                    _ = Task.Run(DatabaseProxy.Save);
-                }
+                    if (Category is null)
+                    {
+                        Category = new Category(Database.CategoryName);
+                        Database.CategoryId = Category.Id;
+                        _ = Task.Run(DatabaseProxy.Save);
+                    }
 
-                if (!plugin.PlayniteApi.Database.Categories.Contains(Category))
-                {
-                    plugin.PlayniteApi.Database.Categories.Add(Category);
+                    if (!plugin.PlayniteApi.Database.Categories.Contains(Category))
+                    {
+                        plugin.PlayniteApi.Database.Categories.Add(Category);
+                    }
                 }
 
                 foreach (var game in importResult.FailedGames) {

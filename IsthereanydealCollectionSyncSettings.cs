@@ -1,9 +1,6 @@
 using Playnite.SDK;
 using Playnite.SDK.Data;
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Windows.Data;
 
 namespace IsthereanydealCollectionSync
 {
@@ -19,6 +16,7 @@ namespace IsthereanydealCollectionSync
         private bool syncDuplicateHider = true;
         private bool redeemEpic = false;
         private bool syncHidden = false;
+        private bool filterFaileds = true;
 
         public ImportMode ImportMode 
         { 
@@ -79,6 +77,12 @@ namespace IsthereanydealCollectionSync
         {
             get => syncHidden;
             set => SetValue(ref syncHidden, value);
+        }
+
+        public bool FilterFaileds
+        {
+            get => filterFaileds;
+            set => SetValue(ref filterFaileds, value);
         }
     }
 

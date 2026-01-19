@@ -232,7 +232,18 @@ namespace IsthereanydealCollectionSync
                         }
                     }
 
-                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, ("LOCIsThereAnyDealCollectionSync"));
+                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, Localized("LOCIsThereAnyDealCollectionSync"));
+
+                    if (importResult.FailedGames.HasItems() && Settings.Settings.FilterFaileds)
+                    {
+                        PlayniteApi.MainView.UIDispatcher.Invoke(() =>
+                        {
+                            FilterPreset preset = new FilterPreset();
+                            preset.Settings = new FilterPresetSettings();
+                            preset.Settings.Category = new IdItemFilterItemProperties(client.Category.Id);
+                            PlayniteApi.MainView.ApplyFilterPreset(preset);
+                        });
+                    }
                 }
                 catch
                 {

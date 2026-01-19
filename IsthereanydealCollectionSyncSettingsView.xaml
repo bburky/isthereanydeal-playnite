@@ -80,5 +80,6 @@
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic}" IsChecked="{Binding Settings.RedeemEpic}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds}" IsChecked="{Binding Settings.FilterFaileds}" />
     </StackPanel>
 </UserControl>

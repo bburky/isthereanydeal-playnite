@@ -21,6 +21,7 @@ IsThereAnyDeal在同步時會幫您設置這個附加元件無法設置的額外
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">將Epic的遊戲標記為「已領取」</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步被DuplicateHider隱藏的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步被隱藏的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">過濾同步失敗的遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">匯入所有遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">加入至IsThereAnyDeal收藏庫</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫</sys:String>

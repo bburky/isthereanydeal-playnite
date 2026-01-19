@@ -8,7 +8,8 @@ namespace IsthereanydealCollectionSync
 {
 	public class Database
 	{
-        public string CategoryName { get; set; } = "_IsThereAnyDealCollectionSync_FailedGame";
+
+        public const string CategoryName = "ITAD Sync Failed";
         public Guid CategoryId { get; set; }
     }
 

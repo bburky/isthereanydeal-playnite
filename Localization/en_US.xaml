@@ -21,6 +21,7 @@ set additional information during synchronization which this plugin is unable to
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">Mark games from Epic Games Store as redeemed</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Synchronize games hidden by DuplicateHider</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Synchronize hidden games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to failed synchronized games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Import all games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection</sys:String>
