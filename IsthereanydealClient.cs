@@ -1,5 +1,6 @@
 using Playnite.SDK;
 using Playnite.SDK.Models;
+using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,29 +8,27 @@ using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync
 {
-    using static IsthereanydealCollectionSync;
+    using static Common;
+
     public class IsthereanydealClient
     {
         public event EventHandler OnAuthenticated;
 
         private static readonly ILogger logger = LogManager.GetLogger();
-        private readonly IsthereanydealCollectionSync plugin;
+        private readonly Plugin plugin;
         public ItadApi Api { get; private set; }
         internal string Username { get; private set; }
-        private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
-        private IsthereanydealCollectionSyncSettings Settings { get => viewModel.Settings; }
+        public Settings Settings { get; set; }
         private DatabaseProxy DatabaseProxy { get; }
         internal Database Database { get => DatabaseProxy.Database; }
         internal Category Category { get; private set; }
 
-        public IsthereanydealClient(IsthereanydealCollectionSync plugin, IsthereanydealCollectionSyncSettingsViewModel settings)
+        public IsthereanydealClient(Plugin plugin, Settings settings)
         {
             this.plugin = plugin;
-            Api = new ItadApi(settings.Settings.Credential);
-            viewModel = settings;
+            Settings = settings;
+            Api = new ItadApi(settings);
             DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
-
-            OnAuthenticated += (s, e) => viewModel.OnPropertyChanged(nameof(viewModel.IsUserLoggedIn));
 
             _ = InitUsername();
             logger.Debug("Client initialized");
@@ -70,7 +69,7 @@ namespace IsthereanydealCollectionSync
                     {
                         if (oauth.TryInitCode(address))
                         {
-                            Api = await oauth.GetTokens();
+                            await oauth.GetTokens(Api);
                             Username = await Api.GetUsername();
                             OnAuthenticated?.Invoke(this, EventArgs.Empty);
                             webView.Close();

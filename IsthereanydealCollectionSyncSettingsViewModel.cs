@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace IsthereanydealCollectionSync
 {
-    public class IsthereanydealCollectionSyncSettings : ObservableObject
+    public class Settings : ObservableObject
     {
         private ImportMode importMode = ImportMode.Skip;
         private bool removeFromWaitlist = true;
@@ -96,33 +96,18 @@ namespace IsthereanydealCollectionSync
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSync plugin;
-        private IsthereanydealCollectionSyncSettings editingClone;
-        private IsthereanydealCollectionSyncSettings settings;
+        private Settings editing;
 
-        public IsthereanydealCollectionSyncSettings Settings
+        public Settings Settings
         {
-            get => settings;
-            set
-            {
-                settings = value;
-                OnPropertyChanged();
-            }
+            get => editing;
+            set => SetValue(ref editing, value);
         }
 
         public IsthereanydealCollectionSyncSettingsViewModel(IsthereanydealCollectionSync plugin)
         {
             this.plugin = plugin;
-
-            var savedSettings = plugin.LoadPluginSettings<IsthereanydealCollectionSyncSettings>();
-            if (!(savedSettings is null))
-            {
-                Settings = savedSettings;
-            }
-            else
-            {
-                Settings = new IsthereanydealCollectionSyncSettings();
-                logger.Warn("No settings found or not loaded. Created new one.");
-            }
+            editing = Serialization.GetClone(plugin.client.Settings);
 
             logger.Debug("ViewModel is initialized");
         }
@@ -137,20 +122,31 @@ namespace IsthereanydealCollectionSync
             });
         }
 
+        // Possible race condition!
+        // BeginEdit() and first-time accessing
+        // Settings is likely overlapped. Playnite
+        // set DataContext right before BeginEdit()
+        // when the user opens the settings for the
+        // first time. When DataContext is set, WPF
+        // emits OnDataContextChanged event which
+        // I suspect causes race condition.
+        //
+        // In a nutshell. Cloning MUST be done at
+        // the constructor, not here.
         public void BeginEdit()
         {
-            editingClone = Serialization.GetClone(Settings);
+            
         }
 
         public void CancelEdit()
         {
-            Settings = editingClone;
+            editing = Serialization.GetClone(plugin.client.Settings);
         }
 
         public void EndEdit()
         {
-            Settings.Credential = plugin.client.Api.Credential;
-            plugin.SavePluginSettings(Settings);
+            plugin.client.Settings = editing;
+            plugin.SavePluginSettings(editing);
         }
 
         public bool VerifySettings(out List<string> errors)

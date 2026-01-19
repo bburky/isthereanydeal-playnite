@@ -10,22 +10,33 @@ using System.Windows.Controls;
 
 namespace IsthereanydealCollectionSync
 {
+    using static Common;
+
     public class IsthereanydealCollectionSync : GenericPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
-        public IsthereanydealCollectionSyncSettingsViewModel Settings { get; }
+        private IsthereanydealCollectionSyncSettingsViewModel viewModel;
         public readonly IsthereanydealClient client;
         private dynamic duplicateHider;
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)
         {
-            Settings = new IsthereanydealCollectionSyncSettingsViewModel(this);
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
             };
-            client = new IsthereanydealClient(this, Settings);
+
+            var settings = LoadPluginSettings<Settings>();
+
+            if (settings is null)
+            {
+                logger.Warn("No settings found or not loaded. Created new one.");
+                settings = new Settings();
+            }
+
+            client = new IsthereanydealClient(this, settings);
+            viewModel = new IsthereanydealCollectionSyncSettingsViewModel(this);
             logger.Info("Completed plugin initialization");
         }
 
@@ -33,12 +44,12 @@ namespace IsthereanydealCollectionSync
         {
             yield return new MainMenuItem
             {
-                MenuSection = "@" + Localized("LOCIsThereAnyDealCollectionSync"),
-                Description = Localized("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
+                MenuSection = "@" + ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"),
+                Description = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
                 Action = (itemArgs) =>
                 {
                     ICollection<Game> games = PlayniteApi.Database.Games;
-                    var syncHidden = Settings.Settings.SyncHidden;
+                    var syncHidden = client.Settings.SyncHidden;
 
                     if (!syncHidden)
                     {
@@ -55,11 +66,11 @@ namespace IsthereanydealCollectionSync
         {
             yield return new GameMenuItem
             {
-                Description = Localized("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
+                Description = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
                 Action = (itemArgs) =>
                 {
                     var hasDh = !(duplicateHider is null);
-                    var syncDh = Settings.Settings.SyncDuplicateHider;
+                    var syncDh = client.Settings.SyncDuplicateHider;
                     logger.Info($"Start importing games from GameMenu (DH: {hasDh}, SyncDH: {syncDh})");
 
                     if (hasDh && syncDh)
@@ -76,7 +87,7 @@ namespace IsthereanydealCollectionSync
 
         public override ISettings GetSettings(bool firstRunSettings)
         {
-            return Settings;
+            return viewModel;
         }
 
         public override UserControl GetSettingsView(bool firstRunSettings)
@@ -109,68 +120,7 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        internal static string Localized(string key)
-        {
-            return ResourceProvider.GetString(key);
-        }
-
-        internal static string Localized(string key, params object[] args)
-        {
-            return string.Format(ResourceProvider.GetString(key), args);
-        }
-
-        // You need to check IPlayniteAPI.Database.Categories
-        // has the category before calling it.
-        internal static void AddCategory(Game game, Category category)
-        {
-            if (game.CategoryIds is null)
-            {
-                game.CategoryIds = new List<Guid> { category.Id };
-            }
-            else
-            {
-                game.CategoryIds.AddMissing(category.Id);
-            }
-        }
-
-        internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Category category)
-        {
-            logger.Info("Remove category from playnite (Category)");
-
-            if (category is null)
-            {
-                return;
-            }
-
-            // IntelliSense IS LYING!
-            // If you try to remove thing that is not
-            // in the collection, it throws
-            // NullReferenceException.
-            try
-            {
-                api.Database.Categories.Remove(category);
-            }
-            catch
-            {
-
-            }
-        }
-
-        internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Guid id)
-        {
-            logger.Info("Remove category from playnite (Guid)");
-
-            try
-            {
-                api.Database.Categories.Remove(id);
-            }
-            catch
-            {
-
-            }
-        }
-
-        internal List<Game> GetCopiesFromDuplicateHider(Game game)
+        private List<Game> GetCopiesFromDuplicateHider(Game game)
         {
             if (duplicateHider is null)
             {
@@ -207,7 +157,7 @@ namespace IsthereanydealCollectionSync
                     if (!client.IsUserLoggedIn())
                     {
                         logger.Info("User not logged in. Stop import.");
-                        PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                         return;
                     }
 
@@ -250,9 +200,9 @@ namespace IsthereanydealCollectionSync
                         }
                     }
 
-                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, Localized("LOCIsThereAnyDealCollectionSync"));
+                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
 
-                    if (importResult.FailedGames.HasItems() && Settings.Settings.FilterFaileds)
+                    if (importResult.FailedGames.HasItems() && client.Settings.FilterFaileds)
                     {
                         PlayniteApi.MainView.UIDispatcher.Invoke(() =>
                         {
@@ -271,7 +221,7 @@ namespace IsthereanydealCollectionSync
                 catch (Exception ex)
                 {
                     logger.Error(ex, "Import failed");
-                    PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncImportError"), Localized("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                    PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncImportError"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                 }
             }), new GlobalProgressOptions(dialogText));
         }

@@ -62,10 +62,9 @@ namespace IsthereanydealCollectionSync
             return true;
         }
 
-        async internal Task<ItadApi> GetTokens()
+        async internal Task GetTokens(ItadApi api)
         {
-
-            if (code is null)
+            if (string.IsNullOrEmpty(code))
             {
                 throw new ITADException("OAuth code is null");
             }
@@ -87,7 +86,7 @@ namespace IsthereanydealCollectionSync
 
             var credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
 
-            return new ItadApi(credential);
+            api.Credential = credential;
         }
     }
 
@@ -237,12 +236,16 @@ namespace IsthereanydealCollectionSync
 
     public class ItadApi
     {
-        private ItadApiCredential credential;
-        internal ItadApiCredential Credential => credential;
-
-        internal ItadApi(ItadApiCredential credential)
+        private readonly Settings settings;
+        public ItadApiCredential Credential
         {
-            this.credential = credential;
+            get => settings.Credential;
+            set => settings.Credential = value;
+        }
+
+        internal ItadApi(Settings settings)
+        {
+            this.settings = settings;
         }
 
         async internal Task RefreshTokens()
@@ -252,7 +255,7 @@ namespace IsthereanydealCollectionSync
                     { "grant_type", "refresh_token" },
                     { "client_id", CLIENT_ID },
                     { "client_secret", CLIENT_SECRET },
-                    { "refresh_token", credential.refresh_token },
+                    { "refresh_token", Credential.refresh_token },
                 };
 
             var content = new FormUrlEncodedContent(parameters);
@@ -261,7 +264,7 @@ namespace IsthereanydealCollectionSync
 
             await ThrowOnBadHttpStatus(response);
 
-            credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
+            Credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
         }
 
         internal async Task<string> GetUsername()
@@ -332,28 +335,10 @@ namespace IsthereanydealCollectionSync
             return await AuthorizeAndSend(request);
         }
 
-        private async Task<HttpResponseMessage> PostAsync(string url)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            
-            return await AuthorizeAndSend(request);
-        }
-
         private async Task<HttpResponseMessage> PostJsonAsync<T>(string url, T payload)
         where T: class
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url)
-            {
-                Content = JsonContentOf(payload)
-            };
-
-            return await AuthorizeAndSend(request);
-        }
-
-        private async Task<HttpResponseMessage> DeleteJsonAsync<T>(string url, T payload)
-        where T: class
-        {
-            var request = new HttpRequestMessage(HttpMethod.Delete, url)
             {
                 Content = JsonContentOf(payload)
             };
@@ -385,14 +370,14 @@ namespace IsthereanydealCollectionSync
 
         private async Task<HttpResponseMessage> AuthorizeAndSend(HttpRequestMessage request)
         {
-            request.Headers.Add("Authorization", $"Bearer {credential.access_token}");
+            request.Headers.Add("Authorization", $"Bearer {Credential.access_token}");
             var response = await Client.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 await RefreshTokens();
                 request.Headers.Remove("Authorization");
-                request.Headers.Add("Authorization", $"Bearer {credential.access_token}");
+                request.Headers.Add("Authorization", $"Bearer {Credential.access_token}");
                 response = await Client.SendAsync(request);
             }
 
@@ -443,7 +428,10 @@ namespace IsthereanydealCollectionSync
         internal const string API_KEY = "97cf351a85f16263a977b5fb78876df2cfece7b0";
 
         // Use one HttpClient accross every class.
-        internal static readonly HttpClient Client = new HttpClient();
+        internal static readonly HttpClient Client = new HttpClient()
+        {
+            Timeout = TimeSpan.FromSeconds(20)
+        };
     }
 
     class Pkce
