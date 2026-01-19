@@ -9,11 +9,12 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using static IsthereanydealCollectionSync.ItadApi;
-using static IsthereanydealCollectionSync.ItadOauthConstants;
 
 namespace IsthereanydealCollectionSync
 {
+    using static ItadOauthConstants;
+    using static ItadApi;
+
     class OauthCodeExchange
     {
         private readonly ILogger logger = LogManager.GetLogger();
@@ -62,7 +63,7 @@ namespace IsthereanydealCollectionSync
             return true;
         }
 
-        async internal Task GetTokens(ItadApi api)
+        internal async Task GetTokens(ItadApi api)
         {
             if (string.IsNullOrEmpty(code))
             {
@@ -243,12 +244,12 @@ namespace IsthereanydealCollectionSync
             set => settings.Credential = value;
         }
 
-        internal ItadApi(Settings settings)
+        public ItadApi(Settings settings)
         {
             this.settings = settings;
         }
 
-        async internal Task RefreshTokens()
+        private async Task RefreshTokens()
         {
             var parameters = new Dictionary<string, string>
                 {
@@ -267,7 +268,7 @@ namespace IsthereanydealCollectionSync
             Credential = await TryParse<ItadApiCredential>(response, "Failed to parse OAuth tokens from ITAD response");
         }
 
-        internal async Task<string> GetUsername()
+        public async Task<string> GetUsername()
         {
             var response = await GetAsync($"{API_URL}user/info/v2");
             await ThrowOnBadHttpStatus(response);
@@ -281,7 +282,7 @@ namespace IsthereanydealCollectionSync
         /// </summary>
         /// <param name="gameNames">An array of game names</param>
         /// <returns>A dictionary of game names and their ITAD game IDs</returns>
-        internal async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
+        public async Task<IDictionary<string, string>> LookUpGameId(ICollection<string> gameNames)
         {
             var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(gameNames));
             await ThrowOnBadHttpStatus(response);
@@ -290,13 +291,13 @@ namespace IsthereanydealCollectionSync
             return res;
         }
 
-        internal async Task AddCopies(ICollection<ItadApiAddCopyInput> games)
+        public async Task AddCopies(ICollection<ItadApiAddCopyInput> games)
         {
             var response = await PostJsonAsync($"{API_URL}collection/copies/v1", games);
             await ThrowOnBadHttpStatus(response);
         }
 
-        internal async Task<ICollection<ItadApiCopy>> GetCopies()
+        public async Task<ICollection<ItadApiCopy>> GetCopies()
         {
             var response = await GetAsync($"{API_URL}collection/copies/v1");
             await ThrowOnBadHttpStatus(response);
@@ -305,13 +306,13 @@ namespace IsthereanydealCollectionSync
             return copies;
         }
 
-        internal async Task UpdateCopies(ICollection<ItadApiUpdateCopyInput> games)
+        public async Task UpdateCopies(ICollection<ItadApiUpdateCopyInput> games)
         {
             var response = await PatchJsonAsync($"{API_URL}collection/copies/v1", games);
             await ThrowOnBadHttpStatus(response);
         }
 
-        internal async Task<ICollection<string>> GetWaitlist()
+        public async Task<ICollection<string>> GetWaitlist()
         {
             var response = await GetAsync($"{API_URL}waitlist/games/v1");
             await ThrowOnBadHttpStatus(response);
@@ -322,7 +323,7 @@ namespace IsthereanydealCollectionSync
             return res;
         }
 
-        internal async Task AddToWaitlist(ICollection<string> gameIds)
+        public async Task AddToWaitlist(ICollection<string> gameIds)
         {
             var response = await PutJsonAsync($"{API_URL}waitlist/games/v1", gameIds);
             await ThrowOnBadHttpStatus(response);
@@ -384,7 +385,7 @@ namespace IsthereanydealCollectionSync
             return response;
         }
 
-        internal async static Task<T> TryParse<T>(HttpResponseMessage response, string msg) 
+        internal static async Task<T> TryParse<T>(HttpResponseMessage response, string msg) 
             where T: class
         {
             string content = await response.Content.ReadAsStringAsync();
@@ -397,7 +398,7 @@ namespace IsthereanydealCollectionSync
             return res;
         }
 
-        internal async static Task ThrowOnBadHttpStatus(HttpResponseMessage response)
+        internal static async Task ThrowOnBadHttpStatus(HttpResponseMessage response)
         {
             try
             {
@@ -456,11 +457,12 @@ namespace IsthereanydealCollectionSync
             return code.ToString();
         }
     }
+
     class RandomString
     {
-        public static RandomNumberGenerator Rng { get; } = RandomNumberGenerator.Create();
+        internal static RandomNumberGenerator Rng { get; } = RandomNumberGenerator.Create();
 
-        public static string GetUrlSafeString(int bytes)
+        internal static string GetUrlSafeString(int bytes)
         {
             byte[] payload = new byte[bytes];
             Rng.GetBytes(payload);

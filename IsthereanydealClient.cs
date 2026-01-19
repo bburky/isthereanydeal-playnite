@@ -17,11 +17,11 @@ namespace IsthereanydealCollectionSync
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly Plugin plugin;
         public ItadApi Api { get; private set; }
+        internal Database Database { get => DatabaseProxy.Database; }
+        internal Category Category { get; private set; }
         internal string Username { get; private set; }
         public Settings Settings { get; set; }
         private DatabaseProxy DatabaseProxy { get; }
-        internal Database Database { get => DatabaseProxy.Database; }
-        internal Category Category { get; private set; }
 
         public IsthereanydealClient(Plugin plugin, Settings settings)
         {
@@ -93,7 +93,7 @@ namespace IsthereanydealCollectionSync
         /// </summary>
         /// <param name="games"></param>
         /// <returns>List of games that failed to synchronize.</returns>
-        async public Task<ImportResult> Import(ICollection<Game> games)
+        public async Task<ImportResult> Import(ICollection<Game> games)
         {
             logger.Info($"Importing {games.Count} games");
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
