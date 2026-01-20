@@ -15,10 +15,10 @@ namespace IsthereanydealCollectionSync
     public class IsthereanydealCollectionSync : GenericPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
-        private IsthereanydealCollectionSyncSettingsViewModel viewModel;
+        private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
         private dynamic duplicateHider;
         private readonly LibraryTracker libraryTracker;
-        public readonly IsthereanydealClient client;
+        internal readonly IsthereanydealClient client;
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)

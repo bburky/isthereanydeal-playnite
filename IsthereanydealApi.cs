@@ -238,7 +238,7 @@ namespace IsthereanydealCollectionSync
     public class ItadApi
     {
         private readonly Settings settings;
-        public ItadApiCredential Credential
+        internal ItadApiCredential Credential
         {
             get => settings.Credential;
             set => settings.Credential = value;

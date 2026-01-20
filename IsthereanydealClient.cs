@@ -20,7 +20,7 @@ namespace IsthereanydealCollectionSync
         internal Database Database { get => DatabaseProxy.Database; }
         internal Category Category { get; private set; }
         internal string Username { get; private set; }
-        public Settings Settings { get; set; }
+        internal Settings Settings { get; set; }
         private DatabaseProxy DatabaseProxy { get; }
 
         public IsthereanydealClient(Plugin plugin, Settings settings, ILogger logger)
