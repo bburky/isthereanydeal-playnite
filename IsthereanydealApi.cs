@@ -197,7 +197,7 @@ namespace IsthereanydealCollectionSync
         Indiegala = 42,
         Steam = 61,
         Ubisoft = 62,
-        Xbox = 48, // Including Microsoft Store.
+        MicrosoftStore = 48,
     }
 
     public class ItadShopExtension
@@ -211,24 +211,24 @@ namespace IsthereanydealCollectionSync
         {
             switch (source?.Name)
             {
-                //case "Battle.net":
-                //    return ItadShop.Blizzard;
+                case "Battle.net":
+                    return ItadShop.Blizzard;
                 case "EA app":
                     return ItadShop.Ea;
                 case "Epic":
                     return ItadShop.Epic;
                 case "GOG":
                     return ItadShop.Gog;
-                case "Humble Bundle":
+                case "Humble":
                     return ItadShop.HumbleBundle;
-                //case "Indiegala":
-                //    return ItadShop.Indiegala;
+                case "Indiegala":
+                    return ItadShop.Indiegala;
                 case "Steam":
                     return ItadShop.Steam;
                 case "Ubisoft Connect":
                     return ItadShop.Ubisoft;
                 case "Xbox":
-                    return ItadShop.Xbox;
+                    return ItadShop.MicrosoftStore;
                 default:
                     return null;
             }
