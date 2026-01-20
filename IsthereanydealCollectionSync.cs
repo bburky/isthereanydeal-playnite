@@ -16,8 +16,9 @@ namespace IsthereanydealCollectionSync
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private IsthereanydealCollectionSyncSettingsViewModel viewModel;
-        public readonly IsthereanydealClient client;
         private dynamic duplicateHider;
+        private readonly LibraryTracker libraryTracker;
+        public readonly IsthereanydealClient client;
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)
@@ -35,8 +36,10 @@ namespace IsthereanydealCollectionSync
                 settings = new Settings();
             }
 
-            client = new IsthereanydealClient(this, settings);
+            libraryTracker = new LibraryTracker(api);
+            client = new IsthereanydealClient(this, settings, logger);
             viewModel = new IsthereanydealCollectionSyncSettingsViewModel(this);
+
             logger.Info("Completed plugin initialization");
         }
 
@@ -120,6 +123,16 @@ namespace IsthereanydealCollectionSync
             }
         }
 
+        public override void OnLibraryUpdated(OnLibraryUpdatedEventArgs args)
+        {
+            if (client.Settings.AutoRunOnLibraryUpdate)
+            {
+                Import(libraryTracker.AddedGames, true);
+            }
+
+            libraryTracker.Reset();
+        }
+
         private List<Game> GetCopiesFromDuplicateHider(Game game)
         {
             if (duplicateHider is null)
@@ -139,91 +152,211 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private void Import(ICollection<Game> games)
+        /// <summary>
+        /// Import games to IsThereAnyDeal collection.<br/>
+        /// If <paramref name="headless"/> is true, import will run in background and send notification when finished.
+        /// </summary>
+        /// <param name="games">Games to import</param>
+        /// <param name="headless">Show message box (false) or send notification (true) during the process</param>
+        public void Import(ICollection<Game> games, bool headless = false)
         {
-            string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
+            logger.Info($"Import headless: {headless}");
 
-            if (games.Count == 1)
+            if (!games.HasItems())
             {
-                dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
+                logger.Info("Import 0 games -- return");
+                return;
             }
 
-            PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
+            if (headless)
             {
-                try
+                _ = ActualImport(games).ContinueWith(task =>
                 {
-                    //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
-
-                    if (!client.IsUserLoggedIn())
+                    var res = task.Result;
+                    
+                    if (res.kind == ImportResultHelper.Kind.Error)
                     {
-                        logger.Info("User not logged in. Stop import.");
-                        PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                        return;
+                        SendErrorNotification(res.text);
                     }
-
-                    ImportResult importResult = await client.Import(games);
-
-                    var resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
-                        importResult.SkippedGames.Count,
-                        importResult.FailedGames.Count);
-
-                    if (games.Count == 1)
+                    else
                     {
-                        var game = games.First();
+                        SendNotification(res.text);
+                    }
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
+            else
+            {
+                string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
 
-                        if (importResult.FailedGames.HasItems())
+                if (games.Count == 1)
+                {
+                    dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
+                }
+
+                //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
+                PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
+                {
+                    var res = await ActualImport(games);
+                    if (res.kind == ImportResultHelper.Kind.Ok)
+                    {
+                        PlayniteApi.Dialogs.ShowMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+
+                        if (res.result.FailedGames.HasItems() && client.Settings.FilterFaileds)
                         {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", game.Name);
-                        }
-                        else if (importResult.SkippedGames.HasItems())
-                        {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedSingle", game.Name);
-                        }
-                        else
-                        {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", game.Name);
+                            PlayniteApi.MainView.UIDispatcher.Invoke(() =>
+                            {
+                                logger.Info("Filtering failed-to-sync games");
+                                FilterPreset preset = new FilterPreset
+                                {
+                                    Settings = new FilterPresetSettings
+                                    {
+                                        Category = new IdItemFilterItemProperties(client.Category.Id)
+                                    }
+                                };
+                                PlayniteApi.MainView.ApplyFilterPreset(preset);
+                            });
                         }
                     }
                     else
                     {
-                        if (importResult.FailedGames.Count == games.Count)
-                        {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", games.Count);
-                        }
-                        else if (importResult.SkippedGames.Count == games.Count)
-                        {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedMultiple", games.Count);
-                        }
-                        else if (importResult.ImportedGames.Count == games.Count)
-                        {
-                            resultDialogText = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
-                        }
+                        PlayniteApi.Dialogs.ShowErrorMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                     }
+                }), new GlobalProgressOptions(dialogText));
+                
+            }
+        }
 
-                    PlayniteApi.Dialogs.ShowMessage(resultDialogText, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
-
-                    if (importResult.FailedGames.HasItems() && client.Settings.FilterFaileds)
-                    {
-                        PlayniteApi.MainView.UIDispatcher.Invoke(() =>
-                        {
-                            logger.Info("Filtering failed-to-sync games");
-                            FilterPreset preset = new FilterPreset
-                            {
-                                Settings = new FilterPresetSettings
-                                {
-                                    Category = new IdItemFilterItemProperties(client.Category.Id)
-                                }
-                            };
-                            PlayniteApi.MainView.ApplyFilterPreset(preset);
-                        });
-                    }
-                }
-                catch (Exception ex)
+        private async Task<ImportResultHelper> ActualImport(ICollection<Game> games)
+        {
+            try
+            {
+                if (!client.IsUserLoggedIn())
                 {
-                    logger.Error(ex, "Import failed");
-                    PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncImportError"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                    logger.Info("User not logged in. Stop import.");
+
+                    return new ImportResultHelper
+                    {
+                        text = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"),
+                        kind = ImportResultHelper.Kind.Error,
+                    };
                 }
-            }), new GlobalProgressOptions(dialogText));
+
+                ImportResult importResult = await client.Import(games);
+                ImportResultHelper importResultHelper = new ImportResultHelper
+                {
+                    result = importResult,
+                    kind = ImportResultHelper.Kind.Ok,
+                };
+
+                importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
+                    importResult.SkippedGames.Count,
+                    importResult.FailedGames.Count);
+
+                if (games.Count == 1)
+                {
+                    var game = games.First();
+
+                    if (importResult.FailedGames.HasItems())
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", game.Name);
+                    }
+                    else if (importResult.SkippedGames.HasItems())
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedSingle", game.Name);
+                    }
+                    else
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", game.Name);
+                    }
+                }
+                else
+                {
+                    if (importResult.FailedGames.Count == games.Count)
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", games.Count);
+                    }
+                    else if (importResult.SkippedGames.Count == games.Count)
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedMultiple", games.Count);
+                    }
+                    else if (importResult.ImportedGames.Count == games.Count)
+                    {
+                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
+                    }
+                }
+
+                return importResultHelper;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Import failed");
+                
+                return new ImportResultHelper
+                {
+                    text = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncImportError"),
+                    kind = ImportResultHelper.Kind.Error,
+                };
+            }
+        }
+
+        private string SendNotification(string msg)
+        {
+            string text = $"{ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")}\n\n{msg}";
+            string id = Guid.NewGuid().ToString();
+
+            PlayniteApi.Notifications.Add(id, text, NotificationType.Info);
+
+            return id;
+        }
+
+        private string SendErrorNotification(string msg)
+        {
+            string text = $"{ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")}\n\n{msg}";
+            string id = Guid.NewGuid().ToString();
+
+            PlayniteApi.Notifications.Add(id, text, NotificationType.Error);
+
+            return id;
+        }
+
+        private class ImportResultHelper
+        {
+            public ImportResult result;
+            public string text;
+            public Kind kind;
+
+            public enum Kind
+            {
+                Ok,
+                Error
+            }
+        }
+
+        private class LibraryTracker
+        {
+            public List<Game> AddedGames { get; private set; } = new List<Game>();
+
+            public LibraryTracker(IPlayniteAPI api)
+            {
+                api.Database.Games.ItemCollectionChanged += (s, e) =>
+                {
+                    foreach (var game in e.RemovedItems)
+                    {
+                        AddedGames.Remove(game);
+                    }
+
+                    foreach (var game in e.AddedItems)
+                    {
+                        AddedGames.Add(game);
+                    }
+                };
+            }
+
+            public void Reset()
+            {
+                // Don't clear() it because Import runs asynchronously. Clearing it causes import failure.
+                AddedGames = new List<Game>();
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ namespace IsthereanydealCollectionSync
         private bool redeemEpic = false;
         private bool syncHidden = false;
         private bool filterFaileds = true;
+        private bool autoRunOnLibraryUpdate = true;
 
         public ImportMode ImportMode 
         { 
@@ -83,6 +84,12 @@ namespace IsthereanydealCollectionSync
         {
             get => filterFaileds;
             set => SetValue(ref filterFaileds, value);
+        }
+
+        public bool AutoRunOnLibraryUpdate
+        {
+            get => autoRunOnLibraryUpdate;
+            set => SetValue(ref autoRunOnLibraryUpdate, value);
         }
     }
 

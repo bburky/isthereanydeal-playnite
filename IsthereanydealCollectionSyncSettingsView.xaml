@@ -70,5 +70,6 @@
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds}" IsChecked="{Binding Settings.FilterFaileds}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate}" IsChecked="{Binding Settings.AutoRunOnLibraryUpdate}" />
     </StackPanel>
 </UserControl>

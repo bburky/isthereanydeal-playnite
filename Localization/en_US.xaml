@@ -22,6 +22,7 @@ ITAD can sync additional data that this addon cannot.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Sync games hidden by DuplicateHider</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to games that are failed to sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate">Start syncing whenever the library is updated</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Add all games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection...</sys:String>

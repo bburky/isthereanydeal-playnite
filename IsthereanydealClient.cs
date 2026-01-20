@@ -14,7 +14,7 @@ namespace IsthereanydealCollectionSync
     {
         public event EventHandler OnAuthenticated;
 
-        private static readonly ILogger logger = LogManager.GetLogger();
+        private readonly ILogger logger;
         private readonly Plugin plugin;
         public ItadApi Api { get; private set; }
         internal Database Database { get => DatabaseProxy.Database; }
@@ -23,9 +23,10 @@ namespace IsthereanydealCollectionSync
         public Settings Settings { get; set; }
         private DatabaseProxy DatabaseProxy { get; }
 
-        public IsthereanydealClient(Plugin plugin, Settings settings)
+        public IsthereanydealClient(Plugin plugin, Settings settings, ILogger logger)
         {
             this.plugin = plugin;
+            this.logger = logger;
             Settings = settings;
             Api = new ItadApi(settings);
             DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
