@@ -72,18 +72,17 @@ namespace IsthereanydealCollectionSync
                 Description = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
                 Action = (itemArgs) =>
                 {
+                    ICollection<Game> games = itemArgs.Games;
                     var hasDh = !(duplicateHider is null);
                     var syncDh = client.Settings.SyncDuplicateHider;
                     logger.Info($"Start importing games from GameMenu (DH: {hasDh}, SyncDH: {syncDh})");
 
                     if (hasDh && syncDh)
                     {
-                        Import(itemArgs.Games.SelectMany(GetCopiesFromDuplicateHider).ToArray());
+                        games = itemArgs.Games.SelectMany(GetCopies).ToArray();
                     }
-                    else
-                    {
-                        Import(itemArgs.Games);
-                    }
+                    
+                    Import(games);
                 }
             };
         }
@@ -127,13 +126,28 @@ namespace IsthereanydealCollectionSync
         {
             if (client.Settings.AutoRunOnLibraryUpdate)
             {
-                Import(libraryTracker.AddedGames, true);
+                ICollection<Game> games = libraryTracker.AddedGames;
+                var hasDh = !(duplicateHider is null);
+                var syncDh = client.Settings.SyncDuplicateHider;
+                logger.Info($"Start importing game on library update (DH: {hasDh}, SyncDH: {syncDh})");
+
+                if (hasDh && syncDh)
+                {
+                    games = games.Where(game => GetCopies(game).Count == 1).ToArray();
+                }
+                
+                Import(games, true);
             }
 
             libraryTracker.Reset();
         }
 
-        private List<Game> GetCopiesFromDuplicateHider(Game game)
+        /// <summary>
+        /// Get all copies of a game using DuplicateHider.
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
+        private List<Game> GetCopies(Game game)
         {
             if (duplicateHider is null)
             {
