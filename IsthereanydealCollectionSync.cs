@@ -178,7 +178,7 @@ namespace IsthereanydealCollectionSync
                     {
                         SendErrorNotification(res.text);
                     }
-                    else
+                    else if (res.result.ImportedGames.HasItems())
                     {
                         SendNotification(res.text);
                     }
