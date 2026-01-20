@@ -219,7 +219,7 @@ namespace IsthereanydealCollectionSync
                     var res = await ActualImport(games);
                     if (res.kind == ImportResultHelper.Kind.Ok)
                     {
-                        PlayniteApi.Dialogs.ShowMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        PlayniteApi.Dialogs.ShowMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
 
                         if (res.result.FailedGames.HasItems() && client.Settings.FilterFaileds)
                         {
