@@ -10,8 +10,6 @@ namespace IsthereanydealCollectionSync
         private bool removeFromWaitlist = true;
         private string[] tags;
         private string note;
-        private bool skipSteam = true;
-        private bool skipGog = true;
         private bool skipNoSource = false;
         private bool syncDuplicateHider = true;
         private bool redeemEpic = false;
@@ -42,18 +40,6 @@ namespace IsthereanydealCollectionSync
         { 
             get => removeFromWaitlist; 
             set => SetValue(ref removeFromWaitlist, value); 
-        }
-
-        public bool SkipSteam
-        {
-            get => skipSteam;
-            set => SetValue(ref skipSteam, value);
-        }
-
-        public bool SkipGog
-        {
-            get => skipGog;
-            set => SetValue(ref skipGog, value);
         }
 
         public bool SkipNoSource

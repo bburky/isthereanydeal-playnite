@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace IsthereanydealCollectionSync
@@ -59,7 +60,6 @@ namespace IsthereanydealCollectionSync
                         games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
                     }
 
-                    logger.Info($"Start importing games from MainMenu (SyncHidden: {syncHidden})");
                     Import(games);
                 }
             };
@@ -75,7 +75,6 @@ namespace IsthereanydealCollectionSync
                     ICollection<Game> games = itemArgs.Games;
                     var hasDh = !(duplicateHider is null);
                     var syncDh = client.Settings.SyncDuplicateHider;
-                    logger.Info($"Start importing games from GameMenu (DH: {hasDh}, SyncDH: {syncDh})");
 
                     if (hasDh && syncDh)
                     {
@@ -126,17 +125,7 @@ namespace IsthereanydealCollectionSync
         {
             if (client.Settings.AutoRunOnLibraryUpdate)
             {
-                ICollection<Game> games = libraryTracker.AddedGames;
-                var hasDh = !(duplicateHider is null);
-                var syncDh = client.Settings.SyncDuplicateHider;
-                logger.Info($"Start importing game on library update (DH: {hasDh}, SyncDH: {syncDh})");
-
-                if (hasDh && syncDh)
-                {
-                    games = games.Where(game => GetCopies(game).Count == 1).ToArray();
-                }
-                
-                Import(games, true);
+                Import(libraryTracker.AddedGames, true);
             }
 
             libraryTracker.Reset();
@@ -174,11 +163,17 @@ namespace IsthereanydealCollectionSync
         /// <param name="headless">Show message box (false) or send notification (true) during the process</param>
         public void Import(ICollection<Game> games, bool headless = false)
         {
-            logger.Info($"Import headless: {headless}");
+            logger.Info($"Start importing (headless: {headless})");
 
             if (!games.HasItems())
             {
-                logger.Info("Import 0 games -- return");
+                logger.Info("No games to import. Import stops");
+                return;
+            }
+
+            if (!client.IsUserLoggedIn())
+            {
+                logger.Info("User not logged in. Stop import.");
                 return;
             }
 
@@ -204,7 +199,18 @@ namespace IsthereanydealCollectionSync
 
                 if (games.Count == 1)
                 {
+                    var game = games.First();
+
+                    if (client.Settings.SkipNoSource && game.Source is null && !YesNoMessageBox(Localized("LOCIsThereAnyDealCollectionSyncImportSkipNoSource", game.Name), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")))
+                    {
+                        return;
+                    }
+
                     dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
+                }
+                else if (client.Settings.SkipNoSource)
+                {
+                    games = games.Where(g => !(g.Source is null)).ToArray();
                 }
 
                 //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
@@ -236,7 +242,6 @@ namespace IsthereanydealCollectionSync
                         PlayniteApi.Dialogs.ShowErrorMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
                     }
                 }), new GlobalProgressOptions(dialogText));
-                
             }
         }
 
@@ -244,27 +249,16 @@ namespace IsthereanydealCollectionSync
         {
             try
             {
-                if (!client.IsUserLoggedIn())
-                {
-                    logger.Info("User not logged in. Stop import.");
-
-                    return new ImportResultHelper
-                    {
-                        text = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"),
-                        kind = ImportResultHelper.Kind.Error,
-                    };
-                }
-
                 ImportResult importResult = await client.Import(games);
-                ImportResultHelper importResultHelper = new ImportResultHelper
+
+                var importResultHelper = new ImportResultHelper
                 {
                     result = importResult,
                     kind = ImportResultHelper.Kind.Ok,
+                    text = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", games.Count, importResult.ImportedGames.Count,
+                        importResult.SkippedGames.Count,
+                        importResult.FailedGames.Count)
                 };
-
-                importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", importResult.ImportedGames.Count,
-                    importResult.SkippedGames.Count,
-                    importResult.FailedGames.Count);
 
                 if (games.Count == 1)
                 {
@@ -311,6 +305,14 @@ namespace IsthereanydealCollectionSync
                     kind = ImportResultHelper.Kind.Error,
                 };
             }
+        }
+
+        private bool YesNoMessageBox(string text, string caption)
+        {
+            var yes = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncYes"), false, false);
+            var no = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncNo"), true, true);
+            var res = PlayniteApi.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, new List<MessageBoxOption> { yes, no });
+            return res == yes;
         }
 
         private string SendNotification(string msg)

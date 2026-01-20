@@ -124,18 +124,12 @@ namespace IsthereanydealCollectionSync
                 string loggerEntry = $"{game.Name}/{game.Source}/{shop?.ToString() ?? "null"}";
                 logger.Debug(loggerEntry);
 
-                if (Settings.SkipSteam && shop == ItadShop.Steam ||
-                    Settings.SkipGog && shop == ItadShop.Gog ||
-                    game.Source is null && Settings.SkipNoSource)
-                {
-                    importResult.SkippedGames.Add(game);
-                    continue;
-                }
-
                 if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
                 {
                     logger.Debug($"{loggerEntry}/{gameItadId}");
 
+                    // Find copy by the same ITAD id;
+                    // same shop first then no shop.
                     var copy = existingCopies
                         .Where(c =>
                             c.game.id == gameItadId &&
