@@ -13,12 +13,20 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove games from Waitlist after sync</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games (i.e., "Source" is not set)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip" xml:space="preserve">Skip games whose "Source" field empty which is the default for manually added games. 
+If you manually set a game's source, it would not be skipped by this option.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">Mark games from Epic Games Store as redeemed</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Sync multiple copies of the same game (DuplicateHider)</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to games that are failed to sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFailedsToolTip" xml:space="preserve">Playnite will show you games that are failed to sync as if a filter is applied.
+This option does not apply to library update.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate">Start syncing whenever the library is updated</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip" xml:space="preserve">A syncing attempt will be made after the library update. 
+This happens in the background. You will receive a notification when it's done.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Sync multiple copies of the same game (DuplicateHider)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHiderToolTip" xml:space="preserve">When you select a game (or rather, a copy) to sync, all copies are synced without selecting them.
+This option has no effect if you don't have DuplicateHider.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games (only applies to "Add all games")</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Add all games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection...</sys:String>
