@@ -24,11 +24,13 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步多個商店的遊戲（DuplicateHider）</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHiderToolTip" xml:space="preserve">當你選擇一個遊戲進行同步，所有該遊戲的商店版本也會被同步，而不用特別去選取它們
 若您沒有安裝DuplicateHider插件，則這個選項的設置與否沒有任何影響</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步隱藏的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步隱藏的遊戲（只適用於「匯入所有遊戲」功能）</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">匯入所有遊戲</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">匯入至IsThereAnyDeal收藏庫</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫...</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">正在匯入{0}至IsThereAnyDeal收藏庫...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple" xml:space="preserve">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫...
+這應該只要花幾秒鐘...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle" xml:space="preserve">正在匯入{0}至IsThereAnyDeal收藏庫...
+這應該只要花幾秒鐘...</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkipNoSource" xml:space="preserve">「{0}」為手動新增，在目前的設定下會被跳過同步。是否要將這次同步以例外處理強制執行？
 
 小技巧: 若不想再看到類似的訊息, 可以在插件設定中取消該選項。</sys:String>
@@ -44,9 +46,22 @@
 失敗：{3}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync錯誤</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
-            xml:space="preserve">您尚未登入
+            xml:space="preserve">您尚未登入至IsThereAnyDeal
 
-請從「附加元件...」 > 「擴充功能設定」 > 「通用」 > 「IsThereAnyDeal Collection Sync」登入</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">同步時發生錯誤，請稍後再試。若問題持續發生，請向開發者回報。</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">登入時發生錯誤，請稍後再試。若問題持續發生，請向開發者回報。</sys:String>
+是否要打開設定以進行登入？</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">發生了連線問題。請確認您的網路連線是否正常：
+
+{0}
+
+請稍後再試。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError" xml:space="preserve">同步時發生錯誤：
+
+{0}
+
+請稍後再試。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError" xml:space="preserve">登入時發生錯誤：
+
+{0}
+        
+請稍後再試。</sys:String>
 </ResourceDictionary>

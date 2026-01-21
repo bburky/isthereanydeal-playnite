@@ -29,8 +29,10 @@ This option has no effect if you don't have DuplicateHider.</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games (only applies to "Add all games")</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Add all games</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple">Importing {0} games into IsThereAnyDeal collection...</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle">Importing {0} into IsThereAnyDeal collection...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple" xml:space="preserve">Importing {0} games into IsThereAnyDeal collection...
+This should only take a few seconds...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle" xml:space="preserve">Importing {0} into IsThereAnyDeal collection...
+This should only take a few seconds...</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkipNoSource" xml:space="preserve">{0} is a manually added game that would've been skipped. Make this an exception and proceed to synchronize?
 
 Tip: To stop seeing this message again, disable the option in add-on settings.</sys:String>
@@ -46,9 +48,22 @@ Skipped: {2}
 Failed: {3}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync Error</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
-            xml:space="preserve">You are not logged in.
+            xml:space="preserve">You are not logged in to IsThereAnyDeal.
 
-Please log into IsThereAnyDeal in "Add-ons..." settings</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError">An error occurred during synchronization. Please try again later. If the issue persists, please report it to the developers.</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError">An error occurred during authentication. Please try again. If the issue persists, please report it to the developer.</sys:String>
+Open settings to log in?</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">A network error occurred. Please check your internet connection:
+
+{0}
+
+Please try again later.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError" xml:space="preserve">An error occurred during synchronization: 
+
+{0}
+
+Please try again later.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError" xml:space="preserve">An error occurred during authentication:
+
+{0}       
+
+Please try again later.</sys:String>
 </ResourceDictionary>

@@ -404,10 +404,10 @@ namespace IsthereanydealCollectionSync
             {
                 response.EnsureSuccessStatusCode();
             }
-            catch (Exception e)
+            catch (HttpRequestException e)
             {
                 string responseContent = await response.Content.ReadAsStringAsync();
-                throw new ITADException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"", e);
+                throw new HttpRequestException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"", e);
             }
         }
         private static StringContent JsonContentOf<T>(T data)

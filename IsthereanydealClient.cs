@@ -4,6 +4,7 @@ using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync
@@ -76,11 +77,17 @@ namespace IsthereanydealCollectionSync
                             webView.Close();
                         }
                     }
-                    catch (ITADException err)
+                    catch (HttpRequestException ex)
                     {
                         webView.Close();
-                        plugin.PlayniteApi.Dialogs.ShowErrorMessage(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncAuthenticationError"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                        logger.Error(err, $"Error in WebView during authentication");
+                        plugin.PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncInternerError", ex.Message), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        logger.Error(ex, $"Error in WebView during authentication");
+                    }
+                    catch (Exception ex)
+                    {
+                        webView.Close();
+                        plugin.PlayniteApi.Dialogs.ShowErrorMessage(Localized("LOCIsThereAnyDealCollectionSyncAuthenticationError", ex.Message), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
+                        logger.Error(ex, $"Error in WebView during authentication");
                     }
                 };
 

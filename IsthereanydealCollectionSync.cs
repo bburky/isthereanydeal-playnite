@@ -5,6 +5,7 @@ using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -171,14 +172,14 @@ namespace IsthereanydealCollectionSync
                 return;
             }
 
-            if (!client.IsUserLoggedIn())
-            {
-                logger.Info("User not logged in. Stop import.");
-                return;
-            }
-
             if (headless)
             {
+                if (!client.IsUserLoggedIn())
+                {
+                    logger.Info("User not logged in. Stop import.");
+                    return;
+                }
+
                 _ = ActualImport(games).ContinueWith(task =>
                 {
                     var res = task.Result;
@@ -195,6 +196,17 @@ namespace IsthereanydealCollectionSync
             }
             else
             {
+                if (!client.IsUserLoggedIn())
+                {
+                    logger.Info("User not logged in. Stop import.");
+                    if (YesNoMessageBox(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption")))
+                    {
+                        PlayniteApi.MainView.OpenPluginSettings(Id);
+                    }
+
+                    return;
+                }
+
                 string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
 
                 if (games.Count == 1)
@@ -212,8 +224,6 @@ namespace IsthereanydealCollectionSync
                 {
                     games = games.Where(g => !(g.Source is null)).ToArray();
                 }
-
-                //TODO: globalProgressActionArgs.CancelToken.IsCancellationRequested and add true to GlobalProgressOptions
                 PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
                 {
                     var res = await ActualImport(games);
@@ -245,6 +255,14 @@ namespace IsthereanydealCollectionSync
             }
         }
 
+        /// <summary>
+        /// The actual import process. This never 
+        /// throws an exception. If an exception happens
+        /// during the execution, it put the error text
+        /// in the return value.
+        /// </summary>
+        /// <param name="games"></param>
+        /// <returns></returns>
         private async Task<ImportResultHelper> ActualImport(ICollection<Game> games)
         {
             try
@@ -295,13 +313,23 @@ namespace IsthereanydealCollectionSync
 
                 return importResultHelper;
             }
+            catch (HttpRequestException ex)
+            {
+                logger.Error(ex, "Import failed");
+
+                return new ImportResultHelper
+                {
+                    text = Localized("LOCIsThereAnyDealCollectionSyncNetworkError", ex.Message),
+                    kind = ImportResultHelper.Kind.Error,
+                };
+            }
             catch (Exception ex)
             {
                 logger.Error(ex, "Import failed");
                 
                 return new ImportResultHelper
                 {
-                    text = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncImportError"),
+                    text = Localized("LOCIsThereAnyDealCollectionSyncImportError", ex.Message),
                     kind = ImportResultHelper.Kind.Error,
                 };
             }
