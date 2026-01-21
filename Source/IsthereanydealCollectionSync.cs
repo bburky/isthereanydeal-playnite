@@ -166,11 +166,6 @@ namespace IsthereanydealCollectionSync
         {
             logger.Info($"Start importing (headless: {headless})");
 
-            if (client.Settings.SkipNoSource)
-            {
-                games = games.Where(g => !(g.Source is null)).ToArray();
-            }
-
             if (!games.HasItems())
             {
                 logger.Info("No games to import. Import stops");
@@ -183,6 +178,11 @@ namespace IsthereanydealCollectionSync
                 {
                     logger.Info("User not logged in. Stop import.");
                     return;
+                }
+
+                if (client.Settings.SkipNoSource)
+                {
+                    games = games.Where(g => !(g.Source is null)).ToArray();
                 }
 
                 _ = ActualImport(games).ContinueWith(task =>
@@ -212,7 +212,7 @@ namespace IsthereanydealCollectionSync
                     return;
                 }
 
-                string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
+                string dialogText;
 
                 if (games.Count == 1)
                 {
@@ -225,6 +225,15 @@ namespace IsthereanydealCollectionSync
 
                     dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
                 }
+                else
+                {
+                    if (client.Settings.SkipNoSource)
+                    {
+                        games = games.Where(g => !(g.Source is null)).ToArray();
+                    }
+                    dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
+                }
+
                 PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
                 {
                     var res = await ActualImport(games);
