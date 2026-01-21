@@ -295,7 +295,7 @@ namespace IsthereanydealCollectionSync
         {
             var response = await Client.PostAsync($"{API_URL}lookup/id/title/v1", JsonContentOf(gameNames));
             await ThrowOnBadHttpStatus(response);
-            var res = Serialization.FromJsonStream<Dictionary<string, string>>(await response.Content.ReadAsStreamAsync());
+            var res = Serialization.FromJsonStream<OrdinalIgnoreCaseStringDictionary>(await response.Content.ReadAsStreamAsync());
 
             return res;
         }
@@ -423,6 +423,14 @@ namespace IsthereanydealCollectionSync
             where T : class
         {
             return new StringContent(Serialization.ToJson(data), Encoding.UTF8, "application/json");
+        }
+    }
+
+    internal class OrdinalIgnoreCaseStringDictionary : Dictionary<string, string>
+    {
+        public OrdinalIgnoreCaseStringDictionary() : base(StringComparer.OrdinalIgnoreCase)
+        {
+            
         }
     }
 
