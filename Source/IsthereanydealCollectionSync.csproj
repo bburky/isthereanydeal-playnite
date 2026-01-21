@@ -83,7 +83,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="icon.svg">
+    <None Include="Assets\**" Exclude="Assets\icon.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
