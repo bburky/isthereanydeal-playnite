@@ -129,11 +129,11 @@ namespace IsthereanydealCollectionSync
                 ItadShop? shop = ItadShopExtension.FromGameSource(game.Source);
                 
                 string loggerEntry = $"{game.Name}/{game.Source}/{shop?.ToString() ?? "null"}";
-                logger.Debug(loggerEntry);
+                logger.Trace(loggerEntry);
 
                 if (gameIds.TryGetValue(game.Name, out string gameItadId) && !(gameItadId is null))
                 {
-                    logger.Debug($"{loggerEntry}/{gameItadId}");
+                    logger.Trace($"{loggerEntry}/{gameItadId}");
 
                     // Find copy by the same ITAD id;
                     // same shop first then no shop.
