@@ -347,8 +347,8 @@ namespace IsthereanydealCollectionSync
 
         private bool YesNoMessageBox(string text, string caption)
         {
-            var yes = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncYes"), false, false);
-            var no = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncNo"), true, true);
+            var yes = new MessageBoxOption(ResourceProvider.GetString("LOCYesLabel"), false, false);
+            var no = new MessageBoxOption(ResourceProvider.GetString("LOCNoLabel"), true, true);
             var res = PlayniteApi.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, new List<MessageBoxOption> { yes, no });
             return res == yes;
         }

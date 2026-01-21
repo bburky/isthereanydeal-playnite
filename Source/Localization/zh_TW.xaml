@@ -3,8 +3,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncYes">是</sys:String>
-    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNo">否</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncRefreshLoginStatus">重新整理</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">若同步的遊戲已在收藏庫：</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">跳過該遊戲</sys:String>
