@@ -49,8 +49,8 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
+            <Button Content="{DynamicResource LOCIsThereAnyDealCollectionSyncRefreshLoginStatus}" HorizontalAlignment="Left" Command="{Binding RefreshCommand}" Margin="5,5,5,5"/>
         </StackPanel>
-        <StackPanel Orientation="Horizontal"/>
         <TextBlock Text="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption}"/>
         <RadioButton Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip}" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Skip}}" />
         <RadioButton Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace}" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Replace}}" />

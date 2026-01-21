@@ -6,6 +6,7 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncYes">Yes</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNo">No</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">Hello {0}!</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncRefreshLoginStatus">Refresh</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">For games already collected:</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">Skip</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">Replace</sys:String>

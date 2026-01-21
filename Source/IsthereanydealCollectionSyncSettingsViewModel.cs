@@ -111,6 +111,17 @@ namespace IsthereanydealCollectionSync
 
         public bool IsUserLoggedIn => plugin.client.IsUserLoggedIn();
 
+        public RelayCommand<object> RefreshCommand
+        {
+            get => new RelayCommand<object>((a) =>
+            {
+                plugin.PlayniteApi.Dialogs.ActivateGlobalProgress(async (progress) =>
+                {
+                    await plugin.client.RetryLogin();
+                }, new GlobalProgressOptions(ResourceProvider.GetString("LOCSteamLoginChecking"), false));
+            });
+        }
+
         public RelayCommand<object> LoginCommand
         {
             get => new RelayCommand<object>((a) =>

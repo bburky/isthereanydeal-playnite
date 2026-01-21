@@ -52,6 +52,12 @@ namespace IsthereanydealCollectionSync
             }
         }
 
+        public async Task<bool> RetryLogin()
+        {
+            await InitUsername();
+            return IsUserLoggedIn();
+        }
+
         public bool IsUserLoggedIn()
         {
             return isAuthenticated;
