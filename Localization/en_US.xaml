@@ -50,7 +50,7 @@ Failed: {3}</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
             xml:space="preserve">You are not logged in to IsThereAnyDeal.
 
-Open settings to log in?</sys:String>
+Open settings to log in? (After login, retry adding games again)</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">A network error occurred. Please check your internet connection:
 
 {0}

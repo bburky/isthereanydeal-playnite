@@ -48,7 +48,7 @@
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
             xml:space="preserve">您尚未登入至IsThereAnyDeal
 
-是否要打開設定以進行登入？</sys:String>
+是否要打開設定以進行登入？（登入後，您需要再重新一次加入遊戲）</sys:String>
     <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">發生了連線問題。請確認您的網路連線是否正常：
 
 {0}
