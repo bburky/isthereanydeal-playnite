@@ -11,7 +11,7 @@ namespace IsthereanydealCollectionSync
 
         // You need to check IPlayniteAPI.Database.Categories
         // has the category before calling it.
-        internal static void AddCategory(Game game, Category category)
+        internal static void AddCategory(IPlayniteAPI api, Game game, Category category)
         {
             if (game.CategoryIds is null)
             {
@@ -21,6 +21,8 @@ namespace IsthereanydealCollectionSync
             {
                 game.CategoryIds.AddMissing(category.Id);
             }
+
+            api.Database.Games.Update(game);
         }
 
         internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Category category)

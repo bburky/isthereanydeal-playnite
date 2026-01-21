@@ -242,8 +242,11 @@ namespace IsthereanydealCollectionSync
                         logger.Info("Adding category to Playnite"); plugin.PlayniteApi.Database.Categories.Add(Category);
                     }
 
-                    foreach (var game in importResult.FailedGames) {
-                        AddCategory(game, Category);
+                    using (plugin.PlayniteApi.Database.BufferedUpdate())
+                        {
+                            foreach (var game in importResult.FailedGames) {
+                            AddCategory(plugin.PlayniteApi, game, Category);
+                        }
                     }
                 }
             }
