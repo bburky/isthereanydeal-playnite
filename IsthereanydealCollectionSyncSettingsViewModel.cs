@@ -101,6 +101,10 @@ namespace IsthereanydealCollectionSync
         {
             this.plugin = plugin;
             editing = Serialization.GetClone(plugin.client.Settings);
+            plugin.client.Authenticated += (s, e) =>
+            {
+                OnPropertyChanged(nameof(IsUserLoggedIn));
+            };
 
             logger.Debug("ViewModel is initialized");
         }

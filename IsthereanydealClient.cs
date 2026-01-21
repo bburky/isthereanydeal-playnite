@@ -13,7 +13,7 @@ namespace IsthereanydealCollectionSync
 
     public class IsthereanydealClient
     {
-        public event EventHandler OnAuthenticated;
+        public event EventHandler Authenticated;
 
         private readonly ILogger logger;
         private readonly Plugin plugin;
@@ -43,7 +43,7 @@ namespace IsthereanydealCollectionSync
                 logger.Info("Getting username");
                 Username = await Api.GetUsername();
 
-                OnAuthenticated?.Invoke(this, EventArgs.Empty);
+                Authenticated?.Invoke(this, EventArgs.Empty);
             }
             catch (ITADException ex)
             {
@@ -60,7 +60,7 @@ namespace IsthereanydealCollectionSync
         {
             logger.Info("Start login");
             var oauth = new OauthCodeExchange();
-            using (var webView = plugin.PlayniteApi.WebViews.CreateView(500, 700))
+            using (var webView = plugin.PlayniteApi.WebViews.CreateView(600, 720))
             {
                 webView.LoadingChanged += async (s, e) =>
                 {
@@ -73,7 +73,7 @@ namespace IsthereanydealCollectionSync
                         {
                             await oauth.GetTokens(Api);
                             Username = await Api.GetUsername();
-                            OnAuthenticated?.Invoke(this, EventArgs.Empty);
+                            Authenticated?.Invoke(this, EventArgs.Empty);
                             webView.Close();
                         }
                     }
@@ -90,7 +90,7 @@ namespace IsthereanydealCollectionSync
                         logger.Error(ex, $"Error in WebView during authentication");
                     }
                 };
-
+                webView.DeleteDomainCookies(ItadOauthConstants.HOST_NAME);
                 webView.Navigate(oauth.LoginUrl);
                 webView.OpenDialog();
             }

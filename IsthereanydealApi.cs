@@ -34,6 +34,8 @@ namespace IsthereanydealCollectionSync
         /// <summary>
         /// Get authorization code from redirect URL
         /// </summary>
+        /// <param name="url"></param>
+        /// <returns>True if the code is valid and initialized, or else false.</returns>
         internal bool TryInitCode(string url)
         {
             if (string.IsNullOrEmpty(url))
@@ -41,14 +43,14 @@ namespace IsthereanydealCollectionSync
                 return false;
             }
 
-            var parts = url.Split('?');
+            Uri uri = new Uri(url);
 
-            if (parts is null || parts.Length != 2 || parts[0] != HOST_URL)
+            if (uri.Host != HOST_NAME)
             {
                 return false;
             }
 
-            var queryParams = HttpUtility.ParseQueryString(parts[1]);
+            var queryParams = HttpUtility.ParseQueryString(uri.Query);
             var state = queryParams.Get("state");
 
             if (this.state != state)
@@ -58,7 +60,14 @@ namespace IsthereanydealCollectionSync
                 return false;
             }
 
-            code = queryParams.Get("code");
+            var code = queryParams.Get("code");
+
+            if (string.IsNullOrEmpty(code))
+            {
+                return false;
+            }
+
+            this.code = code;
 
             return true;
         }
@@ -417,8 +426,9 @@ namespace IsthereanydealCollectionSync
         }
     }
 
-    static class ItadOauthConstants
+    internal static class ItadOauthConstants
     {
+        internal const string HOST_NAME = "isthereanydeal.com";
         internal const string HOST_URL = "https://isthereanydeal.com/";
         internal const string API_URL = "https://api.isthereanydeal.com/";
 
