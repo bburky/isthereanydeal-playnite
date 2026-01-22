@@ -18,12 +18,10 @@ namespace IsthereanydealCollectionSync
         private readonly ILogger logger;
         private readonly Plugin plugin;
         public ItadApi Api { get; private set; }
-        internal Database Database { get => DatabaseProxy.Database; }
-        internal Category Category { get; private set; }
         internal string Username { get; private set; }
         private bool isAuthenticated = false;
         internal Settings Settings { get; set; }
-        private DatabaseProxy DatabaseProxy { get; }
+        internal DatabaseProxy Database { get; }
 
         public IsthereanydealClient(Plugin plugin, Settings settings, ILogger logger)
         {
@@ -31,7 +29,7 @@ namespace IsthereanydealCollectionSync
             this.logger = logger;
             Settings = settings;
             Api = new ItadApi(this);
-            DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
+            Database = DatabaseProxy.LoadOrInit(plugin);
 
             _ = InitUsername();
             logger.Debug("Client initialized");
@@ -115,7 +113,7 @@ namespace IsthereanydealCollectionSync
             logger.Info($"Importing {games.Count} games");
             var lookUpGameIdTask = Api.LookUpGameId(games.Select(game => game.Name).ToArray());
             var getCopiesTask = Api.GetCopies();
-            RemoveCategoryFromDatabase(plugin.PlayniteApi, Category);
+            RemoveCategoryFromDatabase(plugin.PlayniteApi, Database.Category);
 
             Task<ICollection<string>> getWaitlistTask = null;
 
@@ -238,23 +236,15 @@ namespace IsthereanydealCollectionSync
                 {
                     logger.Info($"Start applying category to failed games");
 
-                    if (Category is null)
+                    if (!plugin.PlayniteApi.Database.Categories.Contains(Database.Category))
                     {
-                        logger.Info("Creating new category");
-                        Category = new Category(Database.CategoryName);
-                        Database.CategoryId = Category.Id;
-                        _ = Task.Run(DatabaseProxy.Save);
-                    }
-
-                    if (!plugin.PlayniteApi.Database.Categories.Contains(Category))
-                    {
-                        logger.Info("Adding category to Playnite"); plugin.PlayniteApi.Database.Categories.Add(Category);
+                        logger.Info("Adding category to Playnite"); plugin.PlayniteApi.Database.Categories.Add(Database.Category);
                     }
 
                     using (plugin.PlayniteApi.Database.BufferedUpdate())
                         {
                             foreach (var game in importResult.FailedGames) {
-                            AddCategory(plugin.PlayniteApi, game, Category);
+                            AddCategory(plugin.PlayniteApi, game, Database.Category);
                         }
                     }
                 }

@@ -99,10 +99,7 @@ namespace IsthereanydealCollectionSync
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
         {
-            if (client.Database.CategoryId != Guid.Empty)
-            {
-                RemoveCategoryFromDatabase(PlayniteApi, client.Database.CategoryId);
-            }
+            client.Database.Sync(PlayniteApi.Database);
 
             var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");
 
@@ -242,7 +239,7 @@ namespace IsthereanydealCollectionSync
                                 {
                                     Settings = new FilterPresetSettings
                                     {
-                                        Category = new IdItemFilterItemProperties(client.Category.Id)
+                                        Category = new IdItemFilterItemProperties(client.Database.Category.Id)
                                     }
                                 };
                                 PlayniteApi.MainView.ApplyFilterPreset(preset);
