@@ -101,15 +101,7 @@ namespace IsthereanydealCollectionSync
         {
             if (client.Database.CategoryId != Guid.Empty)
             {
-                try
-                {
-                    logger.Info("Remove category");
-                    PlayniteApi.Database.Categories.Remove(client.Database.CategoryId);
-                }
-                catch
-                {
-
-                }
+                RemoveCategoryFromDatabase(PlayniteApi, client.Database.CategoryId);
             }
 
             var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");

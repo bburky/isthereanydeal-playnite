@@ -27,30 +27,23 @@ namespace IsthereanydealCollectionSync
 
         internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Category category)
         {
-            logger.Info("Remove category from playnite (Category)");
-
             if (category is null)
             {
                 return;
             }
 
-            // IntelliSense IS LYING!
-            // If you try to remove thing that is not
-            // in the collection, it throws
-            // NullReferenceException.
-            try
-            {
-                api.Database.Categories.Remove(category);
-            }
-            catch
-            {
-
-            }
+            RemoveCategoryFromDatabase(api, category.Id);
         }
 
         internal static void RemoveCategoryFromDatabase(IPlayniteAPI api, Guid id)
         {
-            logger.Info("Remove category from playnite (Guid)");
+            logger.Info("Remove category from playnite");
+
+            // Add check since both Remove(Category) and Remove(Guid) throw if category does not exist
+            if (api.Database.Categories.Get(id) is null)
+            {
+                return;
+            }
 
             try
             {
