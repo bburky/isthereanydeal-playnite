@@ -21,6 +21,7 @@ namespace IsthereanydealCollectionSync
         internal Database Database { get => DatabaseProxy.Database; }
         internal Category Category { get; private set; }
         internal string Username { get; private set; }
+        private bool isAuthenticated = false;
         internal Settings Settings { get; set; }
         private DatabaseProxy DatabaseProxy { get; }
 
@@ -42,10 +43,10 @@ namespace IsthereanydealCollectionSync
             {
                 logger.Info("Getting username");
                 Username = await Api.GetUsername();
-
+                isAuthenticated = true;
                 Authenticated?.Invoke(this, EventArgs.Empty);
             }
-            catch (ITADException ex)
+            catch (Exception ex)
             {
                 logger.Error(ex, $"Failed to get username");
             }
@@ -53,7 +54,7 @@ namespace IsthereanydealCollectionSync
 
         public bool IsUserLoggedIn()
         {
-            return !(Username is null);
+            return isAuthenticated;
         }
 
         public void Login()
@@ -73,6 +74,8 @@ namespace IsthereanydealCollectionSync
                         {
                             await oauth.GetTokens(Api);
                             Username = await Api.GetUsername();
+                            // Username might still be null if the user doesn't set a username. So if GetUsername didn't throw, we assume it's authenticated.
+                            isAuthenticated = true;
                             Authenticated?.Invoke(this, EventArgs.Empty);
                             webView.Close();
                         }
