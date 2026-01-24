@@ -409,15 +409,13 @@ namespace IsthereanydealCollectionSync
 
         internal static async Task ThrowOnBadHttpStatus(HttpResponseMessage response)
         {
-            try
+            if (response.IsSuccessStatusCode)
             {
-                response.EnsureSuccessStatusCode();
+                return;
             }
-            catch (HttpRequestException e)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"", e);
-            }
+
+            string responseContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Request response is not OK [{response.StatusCode:d} {response.StatusCode}] \"{responseContent}\"");
         }
         private static StringContent JsonContentOf<T>(T data)
             where T : class
