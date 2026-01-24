@@ -47,6 +47,16 @@ namespace IsthereanydealCollectionSync
             }
         }
 
+        public ItadApiCredential Credential
+        {
+            get => Database.Credential;
+            set
+            {
+                Database.Credential = value;
+                _ = Save();
+            }
+        }
+
         private DatabaseProxy(string filePath)
         {
             this.filePath = filePath;

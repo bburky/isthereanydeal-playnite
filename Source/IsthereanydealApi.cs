@@ -249,8 +249,8 @@ namespace IsthereanydealCollectionSync
         private readonly IsthereanydealClient client;
         internal ItadApiCredential Credential
         {
-            get => client.Settings.Credential;
-            set => client.Settings.Credential = value;
+            get => client.Database.Credential;
+            set => client.Database.Credential = value;
         }
 
         public ItadApi(IsthereanydealClient client)
@@ -265,7 +265,7 @@ namespace IsthereanydealCollectionSync
                     { "grant_type", "refresh_token" },
                     { "client_id", CLIENT_ID },
                     { "client_secret", CLIENT_SECRET },
-                    { "refresh_token", Credential.refresh_token },
+                    { "refresh_token", Credential.refresh_token }, // Credential shouldn't be null
                 };
 
             var content = new FormUrlEncodedContent(parameters);
@@ -380,6 +380,11 @@ namespace IsthereanydealCollectionSync
 
         private async Task<HttpResponseMessage> AuthorizeAndSend(HttpRequestMessage request)
         {
+            if (Credential is null)
+            {
+                throw new HttpRequestException("ITAD credential is null");
+            }
+
             request.Headers.Add("Authorization", $"Bearer {Credential.access_token}");
             var response = await Client.SendAsync(request);
 

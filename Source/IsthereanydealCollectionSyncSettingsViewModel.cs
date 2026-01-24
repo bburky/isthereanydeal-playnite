@@ -23,8 +23,6 @@ namespace IsthereanydealCollectionSync
             set => SetValue(ref importMode, value); 
         }
 
-        public ItadApiCredential Credential { get; set; }
-
         public string[] Tags
         {
             get => tags;
