@@ -1,3 +1,4 @@
+using IsthereanydealCollectionSync.Models;
 using Playnite.SDK;
 using Playnite.SDK.Events;
 using Playnite.SDK.Models;
@@ -9,19 +10,17 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace IsthereanydealCollectionSync
 {
-    using static Common;
-
     public class IsthereanydealCollectionSync : GenericPlugin
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSyncSettingsViewModel viewModel;
-        private dynamic duplicateHider;
-        private readonly LibraryTracker libraryTracker;
         internal readonly IsthereanydealClient client;
         public override Guid Id { get; } = Guid.Parse("1f1c327f-8896-47de-950c-c92dc9fab556");
+        private readonly Guid notificationId;
 
         public IsthereanydealCollectionSync(IPlayniteAPI api) : base(api)
         {
@@ -30,61 +29,82 @@ namespace IsthereanydealCollectionSync
                 HasSettings = true
             };
 
-            var settings = LoadPluginSettings<Settings>();
-
-            if (settings is null)
-            {
-                logger.Warn("No settings found or not loaded. Created new one.");
-                settings = new Settings();
-            }
-
-            libraryTracker = new LibraryTracker(api);
-            client = new IsthereanydealClient(this, settings, logger);
             viewModel = new IsthereanydealCollectionSyncSettingsViewModel(this);
-
-            logger.Info("Completed plugin initialization");
+            client = new IsthereanydealClient(this, logger);
+            notificationId = Guid.NewGuid();
         }
 
         public override IEnumerable<MainMenuItem> GetMainMenuItems(GetMainMenuItemsArgs args)
         {
             yield return new MainMenuItem
             {
-                MenuSection = "@" + ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"),
+                MenuSection = "@",
                 Description = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncMainMenuImport"),
                 Action = (itemArgs) =>
                 {
-                    ICollection<Game> games = PlayniteApi.Database.Games;
-                    var syncHidden = client.Settings.SyncHidden;
-
-                    if (!syncHidden)
-                    {
-                        games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
-                    }
-
-                    Import(games);
+                    SyncGames(PlayniteApi.Database.Games, false);
                 }
             };
         }
 
-        public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
+        /// <summary>
+        /// Import games to IsThereAnyDeal collection.<br/>
+        /// If <paramref name="background"/> is true, import will run in background and send notification when finished.
+        /// </summary>
+        /// <param name="games">Games to import</param>
+        /// <param name="background">Show message box (false) or send notification (true) during the process</param>
+        public async void SyncGames(ICollection<Game> games, bool background)
         {
-            yield return new GameMenuItem
-            {
-                Description = ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncGameMenuImport"),
-                Action = (itemArgs) =>
-                {
-                    ICollection<Game> games = itemArgs.Games;
-                    var hasDh = !(duplicateHider is null);
-                    var syncDh = client.Settings.SyncDuplicateHider;
+            logger.Info($"Start syncing games (background: {background})");
 
-                    if (hasDh && syncDh)
-                    {
-                        games = itemArgs.Games.SelectMany(GetCopies).ToArray();
-                    }
-                    
-                    Import(games);
+            if (!viewModel.Settings.SyncHidden)
+            {
+                games = PlayniteApi.Database.Games.Where((game) => !game.Hidden).ToArray();
+            }
+
+            // The ITAD Profile sync API requires a known shop id
+            // TODO: try to work with ITAD to add support for unknown shops
+            //if (viewModel.Settings.SkipNoSource)
+            if (true)
+            {
+                games = games.Where(g => ItadShopExtension.FromGameSource(g.Source) != ItadShop.Unknown).ToArray();
+            }
+
+            if (!games.HasItems())
+            {
+                logger.Info("No games to sync");
+                return;
+            }
+
+            try
+            {
+                var result = await client.ProfilesSyncCollection(games);
+            }
+            catch (SyncException ex)
+            {
+                logger.Warn(ex, ex.Message);
+                if (background)
+                {
+                    // TODO: localize message
+                    string text = $"{ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")}\n\n{ex.Message}";
+                    PlayniteApi.Notifications.Add(notificationId.ToString(), text, NotificationType.Error);
                 }
-            };
+                else
+                {
+                    // TODO: localize message
+                    PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, ex.Message);
+                // Unconditionally show dialog? Other Exception types are unexpected
+                PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
+            }
+        }
+        internal void ClearNotifications()
+        {
+            PlayniteApi.Notifications.Remove(notificationId.ToString());
         }
 
         public override ISettings GetSettings(bool firstRunSettings)
@@ -97,310 +117,12 @@ namespace IsthereanydealCollectionSync
             return new IsthereanydealCollectionSyncSettingsView();
         }
 
-        public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
-        {
-            if (client.Database.CategoryId != Guid.Empty)
-            {
-                try
-                {
-                    logger.Info("Remove category");
-                    PlayniteApi.Database.Categories.Remove(client.Database.CategoryId);
-                }
-                catch
-                {
-
-                }
-            }
-
-            var duplicateHiderGuid = Guid.Parse("382f8003-8ed0-4e47-ae93-05b43c9c6c32");
-
-            duplicateHider = PlayniteApi.Addons.Plugins.FirstOrDefault(p => p.Id == duplicateHiderGuid);
-
-            if (!(duplicateHider is null))
-            {
-                logger.Info("Detected DuplicateHider");
-            }
-        }
-
         public override void OnLibraryUpdated(OnLibraryUpdatedEventArgs args)
         {
-            if (client.Settings.AutoRunOnLibraryUpdate)
+            // TODO: consider debouncing this. In theory well behaved plugins should batch updates, but we can debounce to be safe.
+            if (viewModel.Settings.AutoRunOnLibraryUpdate)
             {
-                Import(libraryTracker.AddedGames, true);
-            }
-
-            libraryTracker.Reset();
-        }
-
-        /// <summary>
-        /// Get all copies of a game using DuplicateHider.
-        /// </summary>
-        /// <param name="game"></param>
-        /// <returns></returns>
-        private List<Game> GetCopies(Game game)
-        {
-            if (duplicateHider is null)
-            {
-                return new List<Game> { game };
-            }
-
-            var games = duplicateHider.GetCopies(game);
-
-            if (games is List<Game>)
-            {
-                return games;
-            }
-            else
-            {
-                return new List<Game> { game };
-            }
-        }
-
-        /// <summary>
-        /// Import games to IsThereAnyDeal collection.<br/>
-        /// If <paramref name="headless"/> is true, import will run in background and send notification when finished.
-        /// </summary>
-        /// <param name="games">Games to import</param>
-        /// <param name="headless">Show message box (false) or send notification (true) during the process</param>
-        public void Import(ICollection<Game> games, bool headless = false)
-        {
-            logger.Info($"Start importing (headless: {headless})");
-
-            if (client.Settings.SkipNoSource)
-            {
-                games = games.Where(g => !(g.Source is null)).ToArray();
-            }
-
-            if (!games.HasItems())
-            {
-                logger.Info("No games to import. Import stops");
-                return;
-            }
-
-            if (headless)
-            {
-                if (!client.IsUserLoggedIn())
-                {
-                    logger.Info("User not logged in. Stop import.");
-                    return;
-                }
-
-                _ = ActualImport(games).ContinueWith(task =>
-                {
-                    var res = task.Result;
-                    
-                    if (res.kind == ImportResultHelper.Kind.Error)
-                    {
-                        SendErrorNotification(res.text);
-                    }
-                    else if (res.result.ImportedGames.HasItems())
-                    {
-                        SendNotification(res.text);
-                    }
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
-            }
-            else
-            {
-                if (!client.IsUserLoggedIn())
-                {
-                    logger.Info("User not logged in. Stop import.");
-                    if (YesNoMessageBox(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption")))
-                    {
-                        PlayniteApi.MainView.OpenPluginSettings(Id);
-                    }
-
-                    return;
-                }
-
-                string dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageMultiple", games.Count);
-
-                if (games.Count == 1)
-                {
-                    var game = games.First();
-
-                    if (client.Settings.SkipNoSource && game.Source is null && !YesNoMessageBox(Localized("LOCIsThereAnyDealCollectionSyncImportSkipNoSource", game.Name), ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")))
-                    {
-                        return;
-                    }
-
-                    dialogText = Localized("LOCIsThereAnyDealCollectionSyncImportMessageSingle", games.First().Name);
-                }
-                PlayniteApi.Dialogs.ActivateGlobalProgress(new Func<GlobalProgressActionArgs, Task>(async (progressArgs) =>
-                {
-                    var res = await ActualImport(games);
-                    if (res.kind == ImportResultHelper.Kind.Ok)
-                    {
-                        PlayniteApi.Dialogs.ShowMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
-
-                        if (res.result.FailedGames.HasItems() && client.Settings.FilterFaileds)
-                        {
-                            PlayniteApi.MainView.UIDispatcher.Invoke(() =>
-                            {
-                                logger.Info("Filtering failed-to-sync games");
-                                FilterPreset preset = new FilterPreset
-                                {
-                                    Settings = new FilterPresetSettings
-                                    {
-                                        Category = new IdItemFilterItemProperties(client.Category.Id)
-                                    }
-                                };
-                                PlayniteApi.MainView.ApplyFilterPreset(preset);
-                            });
-                        }
-                    }
-                    else
-                    {
-                        PlayniteApi.Dialogs.ShowErrorMessage(res.text, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncErrorCaption"));
-                    }
-                }), new GlobalProgressOptions(dialogText));
-            }
-        }
-
-        /// <summary>
-        /// The actual import process. This never 
-        /// throws an exception. If an exception happens
-        /// during the execution, it put the error text
-        /// in the return value.
-        /// </summary>
-        /// <param name="games"></param>
-        /// <returns></returns>
-        private async Task<ImportResultHelper> ActualImport(ICollection<Game> games)
-        {
-            try
-            {
-                ImportResult importResult = await client.Import(games);
-
-                var importResultHelper = new ImportResultHelper
-                {
-                    result = importResult,
-                    kind = ImportResultHelper.Kind.Ok,
-                    text = Localized("LOCIsThereAnyDealCollectionSyncImportMixed", games.Count, importResult.ImportedGames.Count,
-                        importResult.SkippedGames.Count,
-                        importResult.FailedGames.Count)
-                };
-
-                if (games.Count == 1)
-                {
-                    var game = games.First();
-
-                    if (importResult.FailedGames.HasItems())
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportFailureSingle", game.Name);
-                    }
-                    else if (importResult.SkippedGames.HasItems())
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedSingle", game.Name);
-                    }
-                    else
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedSingle", game.Name);
-                    }
-                }
-                else
-                {
-                    if (importResult.FailedGames.Count == games.Count)
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportFailureMultiple", games.Count);
-                    }
-                    else if (importResult.SkippedGames.Count == games.Count)
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSkippedMultiple", games.Count);
-                    }
-                    else if (importResult.ImportedGames.Count == games.Count)
-                    {
-                        importResultHelper.text = Localized("LOCIsThereAnyDealCollectionSyncImportSucceedMultiple", games.Count);
-                    }
-                }
-
-                return importResultHelper;
-            }
-            catch (HttpRequestException ex)
-            {
-                logger.Error(ex, "Import failed");
-
-                return new ImportResultHelper
-                {
-                    text = Localized("LOCIsThereAnyDealCollectionSyncNetworkError", ex.Message),
-                    kind = ImportResultHelper.Kind.Error,
-                };
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "Import failed");
-                
-                return new ImportResultHelper
-                {
-                    text = Localized("LOCIsThereAnyDealCollectionSyncImportError", ex.Message),
-                    kind = ImportResultHelper.Kind.Error,
-                };
-            }
-        }
-
-        private bool YesNoMessageBox(string text, string caption)
-        {
-            var yes = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncYes"), false, false);
-            var no = new MessageBoxOption(ResourceProvider.GetString("LOCIsThereAnyDealCollectionSyncNo"), true, true);
-            var res = PlayniteApi.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, new List<MessageBoxOption> { yes, no });
-            return res == yes;
-        }
-
-        private string SendNotification(string msg)
-        {
-            string text = $"{ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")}\n\n{msg}";
-            string id = Guid.NewGuid().ToString();
-
-            PlayniteApi.Notifications.Add(id, text, NotificationType.Info);
-
-            return id;
-        }
-
-        private string SendErrorNotification(string msg)
-        {
-            string text = $"{ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync")}\n\n{msg}";
-            string id = Guid.NewGuid().ToString();
-
-            PlayniteApi.Notifications.Add(id, text, NotificationType.Error);
-
-            return id;
-        }
-
-        private class ImportResultHelper
-        {
-            public ImportResult result;
-            public string text;
-            public Kind kind;
-
-            public enum Kind
-            {
-                Ok,
-                Error
-            }
-        }
-
-        private class LibraryTracker
-        {
-            public List<Game> AddedGames { get; private set; } = new List<Game>();
-
-            public LibraryTracker(IPlayniteAPI api)
-            {
-                api.Database.Games.ItemCollectionChanged += (s, e) =>
-                {
-                    foreach (var game in e.RemovedItems)
-                    {
-                        AddedGames.Remove(game);
-                    }
-
-                    foreach (var game in e.AddedItems)
-                    {
-                        AddedGames.Add(game);
-                    }
-                };
-            }
-
-            public void Reset()
-            {
-                // Don't clear() it because Import runs asynchronously. Clearing it causes import failure.
-                AddedGames = new List<Game>();
+                SyncGames(PlayniteApi.Database.Games, true);
             }
         }
     }

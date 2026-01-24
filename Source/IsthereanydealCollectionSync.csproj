@@ -50,15 +50,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common.cs" />
-    <Compile Include="Database.cs" />
     <Compile Include="Exception.cs" />
-    <Compile Include="IsthereanydealApi.cs" />
     <Compile Include="IsthereanydealClient.cs" />
     <Compile Include="IsthereanydealCollectionSync.cs" />
     <Compile Include="IsthereanydealCollectionSyncSettingsViewModel.cs" />
     <Compile Include="IsthereanydealCollectionSyncSettingsView.xaml.cs">
       <DependentUpon>IsthereanydealCollectionSyncSettingsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\OauthToken.cs" />
+    <Compile Include="Models\ProfilesLink.cs" />
+    <Compile Include="Models\ProfilesSyncCollection.cs" />
+    <Compile Include="Models\SyncException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

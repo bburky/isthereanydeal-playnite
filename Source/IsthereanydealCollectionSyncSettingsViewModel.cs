@@ -1,152 +1,111 @@
 using Playnite.SDK;
 using Playnite.SDK.Data;
+using Playnite.SDK.Plugins;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime;
 
 namespace IsthereanydealCollectionSync
 {
     public class Settings : ObservableObject
     {
-        private ImportMode importMode = ImportMode.Skip;
-        private bool removeFromWaitlist = true;
-        private string[] tags;
-        private string note;
-        private bool skipNoSource = false;
-        private bool syncDuplicateHider = true;
-        private bool redeemEpic = false;
-        private bool syncHidden = false;
-        private bool filterFaileds = true;
-        private bool autoRunOnLibraryUpdate = true;
-
-        public ImportMode ImportMode 
-        { 
-            get => importMode;
-            set => SetValue(ref importMode, value); 
-        }
-
-        public ItadApiCredential Credential { get; set; }
-
-        public string[] Tags
-        {
-            get => tags;
-            set => SetValue(ref tags, value);
-        }
-
-        public string Note {
-            get => note;
-            set => SetValue(ref note, value);
-        }
-
-        public bool RemoveFromWaitlist 
-        { 
-            get => removeFromWaitlist; 
-            set => SetValue(ref removeFromWaitlist, value); 
-        }
-
-        public bool SkipNoSource
-        {
-            get => skipNoSource;
-            set => SetValue(ref skipNoSource, value);
-        }
-
-        public bool SyncDuplicateHider
-        {
-            get => syncDuplicateHider;
-            set => SetValue(ref syncDuplicateHider, value);
-        }
-
-        public bool RedeemEpic
-        {
-            get => redeemEpic;
-            set => SetValue(ref redeemEpic, value);
-        }
-
-        public bool SyncHidden
-        {
-            get => syncHidden;
-            set => SetValue(ref syncHidden, value);
-        }
-
-        public bool FilterFaileds
-        {
-            get => filterFaileds;
-            set => SetValue(ref filterFaileds, value);
-        }
-
-        public bool AutoRunOnLibraryUpdate
-        {
-            get => autoRunOnLibraryUpdate;
-            set => SetValue(ref autoRunOnLibraryUpdate, value);
-        }
-    }
-
-    public enum ImportMode
-    {
-        Skip,
-        Replace,
+        public bool SkipNoSource { get; set; } = false;
+        public bool SyncHidden { get; set; } = false;
+        public bool AutoRunOnLibraryUpdate { get; set; } = true;
     }
 
     public class IsthereanydealCollectionSyncSettingsViewModel : ObservableObject, ISettings
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSync plugin;
-        private Settings editing;
+        public Settings editingClone { get; set; }
 
+        private Settings settings;
         public Settings Settings
         {
-            get => editing;
-            set => SetValue(ref editing, value);
+            get => settings;
+            set
+            {
+                settings = value;
+                OnPropertyChanged();
+            }
         }
 
         public IsthereanydealCollectionSyncSettingsViewModel(IsthereanydealCollectionSync plugin)
         {
             this.plugin = plugin;
-            editing = Serialization.GetClone(plugin.client.Settings);
-            plugin.client.Authenticated += (s, e) =>
+            var savedSettings = LoadSavedSettings();
+            if (savedSettings != null)
             {
-                OnPropertyChanged(nameof(IsUserLoggedIn));
-            };
-
-            logger.Debug("ViewModel is initialized");
+                Settings = savedSettings;
+            }
+            else
+            {
+                Settings = new Settings();
+            }
         }
 
-        public bool IsUserLoggedIn => plugin.client.IsUserLoggedIn();
+        public bool IsUserLoggedIn
+        {
+            get
+            {
+                return plugin.client.GetIsUserLoggedIn().GetAwaiter().GetResult();
+            }
+        }
 
         public RelayCommand<object> LoginCommand
         {
-            get => new RelayCommand<object>((a) =>
+            get => new RelayCommand<object>(async (a) =>
             {
-                plugin.client.Login();
+                plugin.ClearNotifications();
+                await plugin.client.Login();
+                OnPropertyChanged(nameof(IsUserLoggedIn));
+            });
+        }
+        public static RelayCommand<object> NavigateUrlCommand
+        {
+            get => new RelayCommand<object>((obj) =>
+            {
+                try
+                {
+                    if (obj is Uri uri)
+                    {
+                        Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+                    }
+                    else
+                    {
+                        logger.Error("Failed to open url.");
+                    }
+                }
+                catch (Exception e) when (!Debugger.IsAttached)
+                {
+                    logger.Error(e, "Failed to open url.");
+                }
             });
         }
 
-        // Possible race condition!
-        // BeginEdit() and first-time accessing
-        // Settings is likely overlapped. Playnite
-        // set DataContext right before BeginEdit()
-        // when the user opens the settings for the
-        // first time. When DataContext is set, WPF
-        // emits OnDataContextChanged event which
-        // I suspect causes race condition.
-        //
-        // In a nutshell. Cloning MUST be done at
-        // the constructor, not here.
         public void BeginEdit()
         {
-            
+            editingClone = Serialization.GetClone(Settings);
         }
 
         public void CancelEdit()
         {
-            editing = Serialization.GetClone(plugin.client.Settings);
+            Settings = editingClone;
         }
 
         public void EndEdit()
         {
-            plugin.client.Settings = editing;
-            plugin.SavePluginSettings(editing);
+            plugin.SavePluginSettings(Settings);
         }
 
-        public bool VerifySettings(out List<string> errors)
+        public Settings LoadSavedSettings()
+        {
+            return plugin.LoadPluginSettings<Settings>();
+        }
+
+        public virtual bool VerifySettings(out List<string> errors)
         {
             errors = new List<string>();
             return true;

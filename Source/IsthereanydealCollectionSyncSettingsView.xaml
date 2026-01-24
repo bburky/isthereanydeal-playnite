@@ -10,6 +10,8 @@
     <UserControl.Resources>
         <local:StringToStringArray x:Key="StringToStringArray"/>
         <local:ComparisonConverter x:Key="ComparisonConverter" />
+        <sys:Boolean x:Key="True">True</sys:Boolean>
+        <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
     <StackPanel Margin="30,0,30,0" VerticalAlignment="Stretch">
         <StackPanel.Resources>
@@ -34,40 +36,52 @@
             </Style>
         </StackPanel.Resources>
         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-            <Button Content="{DynamicResource LOCSteamAuthenticateLabel}" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="5,5,5,5"/>
+            <Button Content="{DynamicResource LOCIsThereAnyDealCollectionSyncAuthenticateLabel}" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="5,5,5,5"/>
             <TextBlock>
+                <TextBlock.Tag>
+                    <PriorityBinding>
+                        <Binding Path="IsUserLoggedIn" IsAsync="True" />
+                        <Binding Source="{x:Null}" />
+                    </PriorityBinding>
+                </TextBlock.Tag>
                 <TextBlock.Style>
                     <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
-                                <Setter Property="Text" Value="{DynamicResource LOCSteamLoggedIn}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="False">
-                                <Setter Property="Text" Value="{DynamicResource LOCSteamNotLoggedIn}" />
-                            </DataTrigger>
+                            <Trigger Property="Tag" Value="{StaticResource True}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{StaticResource False}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncNotLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{x:Null}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckingLoggedIn}" />
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
         </StackPanel>
-        <StackPanel Orientation="Horizontal"/>
-        <TextBlock Text="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption}"/>
-        <RadioButton Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip}" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Skip}}" />
-        <RadioButton Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace}" IsChecked="{Binding Settings.ImportMode, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static local:ImportMode.Replace}}" />
-        <StackPanel Orientation="Horizontal">
-            <Label Target="{Binding ElementName=Tags}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelTags}" />
-            <TextBox Name="Tags" Text="{Binding Settings.Tags, Converter={StaticResource StringToStringArray}}" MinWidth="100" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncTagsTooltip}" />
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <Label Target="{Binding ElementName=Note}" Content="{DynamicResource LOCIsThereAnyDealCollectionSyncLabelNote}" />
-            <TextBox Name="Note" Text="{Binding Settings.Note}" MinWidth="100"></TextBox>
-        </StackPanel>
-        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist}" IsChecked="{Binding Settings.RemoveFromWaitlist}"/>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource}" IsChecked="{Binding Settings.SkipNoSource}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip}" />
-        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic}" IsChecked="{Binding Settings.RedeemEpic}" />
-        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds}" IsChecked="{Binding Settings.FilterFaileds}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxFilterFailedsToolTip}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate}" IsChecked="{Binding Settings.AutoRunOnLibraryUpdate}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip}" />
-        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider}" IsChecked="{Binding Settings.SyncDuplicateHider}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHiderToolTip}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
+        <TextBlock TextWrapping="Wrap">
+                <Run Text="Note, this extension always REPLACES the list of synced games in the IsThereAnyDeal Collection Profile. Games removed (or excluded with above options) will be removed from your ITAD collection. Games manually added to ITAD collections or synced directly from Steam to ITAD will not be affected." />
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: support configurable accountId to let people have a profile per Playnite installation on different computers." />
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: clean up and localize this text."/>
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: For now, manually added games or games with known known equvalent ITAD store will be ignored due to limitations in ITAD API" />
+                <LineBreak/>
+                <LineBreak/>
+                <Hyperlink NavigateUri="https://isthereanydeal.com/settings/profiles/"
+                    Command="{Binding NavigateUrlCommand}"
+                    CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+                    <Run Text="IsThereAnyDeal Profile Configuration" />
+                </Hyperlink>
+        </TextBlock>
     </StackPanel>
 </UserControl>
