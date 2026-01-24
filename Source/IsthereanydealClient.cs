@@ -30,7 +30,7 @@ namespace IsthereanydealCollectionSync
             this.plugin = plugin;
             this.logger = logger;
             Settings = settings;
-            Api = new ItadApi(settings);
+            Api = new ItadApi(this);
             DatabaseProxy = DatabaseProxy.LoadOrInit(plugin);
 
             _ = InitUsername();

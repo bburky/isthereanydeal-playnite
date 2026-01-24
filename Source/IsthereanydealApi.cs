@@ -246,16 +246,16 @@ namespace IsthereanydealCollectionSync
 
     public class ItadApi
     {
-        private readonly Settings settings;
+        private readonly IsthereanydealClient client;
         internal ItadApiCredential Credential
         {
-            get => settings.Credential;
-            set => settings.Credential = value;
+            get => client.Settings.Credential;
+            set => client.Settings.Credential = value;
         }
 
-        public ItadApi(Settings settings)
+        public ItadApi(IsthereanydealClient client)
         {
-            this.settings = settings;
+            this.client = client;
         }
 
         private async Task RefreshTokens()
