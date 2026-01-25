@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncYes">Yes</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNo">No</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticateLabel">Authenticate</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLoggedIn">User is authenticated</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckingLoggedIn">Checking authentication status...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNotLoggedIn">Requires authentication</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">For games already collected:</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">Skip</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">Replace</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">Tags (separated by comma)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">Example: tag1,tag2,tag3</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">Note</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">Remove games from Waitlist after sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">Skip manually added games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip" xml:space="preserve">Skip games whose "Source" field empty which is the default for manually added games. 
+If you manually set a game's source, it would not be skipped by this option.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">Mark games from Epic Games Store as redeemed</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">Apply filter to games that are failed to sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFailedsToolTip" xml:space="preserve">Playnite will show you games that are failed to sync as if a filter is applied.
+This option does not apply to library update.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate">Start syncing whenever the library is updated</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip" xml:space="preserve">A syncing attempt will be made after the library update. 
+This happens in the background. You will receive a notification when it's done.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">Sync multiple copies of the same game (DuplicateHider)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHiderToolTip" xml:space="preserve">When you select a game (or rather, a copy) to sync, all copies are synced without selecting them.
+This option has no effect if you don't have DuplicateHider.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">Sync hidden games</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">Sync all games to IsThereAnyDeal collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">Add to IsThereAnyDeal Collection</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple" xml:space="preserve">Importing {0} games into IsThereAnyDeal collection...
+This should only take a few seconds...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle" xml:space="preserve">Importing {0} into IsThereAnyDeal collection...
+This should only take a few seconds...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkipNoSource" xml:space="preserve">{0} is a manually added game that would've been skipped. Make this an exception and proceed to synchronize?
+
+Tip: To stop seeing this message again, disable the option in add-on settings.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">Successfully added {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">Successfully added {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">Failed to add {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">Failed to add {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">Skipped {0} games.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">Skipped {0}.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">Processed a total of {0} games.
+Added: {1}
+Skipped: {2}
+Failed: {3}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync Error</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
+            xml:space="preserve">You are not logged in to IsThereAnyDeal.
+
+Open settings to log in? (After login, retry adding games again)</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">A network error occurred. Please check your internet connection:
+
+{0}
+
+Please try again later.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError" xml:space="preserve">An error occurred during synchronization: 
+
+{0}
+
+Please try again later.</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError" xml:space="preserve">An error occurred during authentication:
+
+{0}       
+
+Please try again later.</sys:String>
+</ResourceDictionary>

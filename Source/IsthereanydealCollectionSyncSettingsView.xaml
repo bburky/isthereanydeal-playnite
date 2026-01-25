@@ -1,0 +1,88 @@
+<UserControl x:Class="IsthereanydealCollectionSync.IsthereanydealCollectionSyncSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:IsthereanydealCollectionSync"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="600">
+    <UserControl.Resources>
+        <local:StringToStringArray x:Key="StringToStringArray"/>
+        <local:ComparisonConverter x:Key="ComparisonConverter" />
+        <sys:Boolean x:Key="True">True</sys:Boolean>
+        <sys:Boolean x:Key="False">False</sys:Boolean>
+    </UserControl.Resources>
+    <StackPanel Margin="30,0,30,0" VerticalAlignment="Stretch">
+        <StackPanel.Resources>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,5,5,5" />
+            </Style>
+            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,5,5,5" />
+            </Style>
+            <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+                <Setter Property="Margin" Value="0,5,5,5" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                <Setter Property="Margin" Value="0,5,5,5" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+                <Setter Property="Margin" Value="0,5,5,5" />
+            </Style>
+        </StackPanel.Resources>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <Button Content="{DynamicResource LOCIsThereAnyDealCollectionSyncAuthenticateLabel}" HorizontalAlignment="Left" Command="{Binding LoginCommand}" Margin="5,5,5,5"/>
+            <TextBlock>
+                <TextBlock.Tag>
+                    <PriorityBinding>
+                        <Binding Path="IsUserLoggedIn" IsAsync="True" />
+                        <Binding Source="{x:Null}" />
+                    </PriorityBinding>
+                </TextBlock.Tag>
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                        <Style.Triggers>
+                            <Trigger Property="Tag" Value="{StaticResource True}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{StaticResource False}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncNotLoggedIn}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="{x:Null}">
+                                <Setter Property="Text" Value="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckingLoggedIn}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource}" IsChecked="{Binding Settings.SkipNoSource}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip}" />
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate}" IsChecked="{Binding Settings.AutoRunOnLibraryUpdate}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip}" />
+        <!-- TODO: maybe note in LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate that this runs on startup too -->
+        <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
+        <TextBlock TextWrapping="Wrap">
+                <Run Text="Note, on each sync this extension REPLACES the list of previously synced games in the IsThereAnyDeal collection profile. Games removed (or excluded with above options) will be removed from your ITAD collection. Games manually added to ITAD collections or synced directly from Steam to ITAD will not be affected." />
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: support configurable accountId to let people have a profile per Playnite installation on different computers. Unsure if this should be a text field, or a toggle setting and we just generate and persist a GUID" />
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: clean up and localize this text."/>
+                <LineBreak/>
+                <LineBreak/>
+                <Run Text="TODO: For now, manually added games or games with known known equvalent ITAD store will be ignored due to limitations in ITAD API" />
+                <LineBreak/>
+                <LineBreak/>
+                <Hyperlink NavigateUri="https://isthereanydeal.com/settings/profiles/"
+                    Command="{Binding NavigateUrlCommand}"
+                    CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}">
+                    <Run Text="IsThereAnyDeal Profile Configuration" />
+                </Hyperlink>
+        </TextBlock>
+    </StackPanel>
+</UserControl>

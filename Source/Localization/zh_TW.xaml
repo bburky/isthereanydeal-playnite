@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSync">IsThereAnyDeal Collection Sync</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncYes">是</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNo">否</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeCaption">若同步的遊戲已在收藏庫：</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeSkip">跳過該遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxImportModeReplace">取代該遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelTags">標籤（以半形逗號 「,」 分隔）</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncTagsTooltip">例如: tag1,tag2,tag3</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncLabelNote">筆記</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRemoveWaitlist">同步後將遊戲從Waitlist移除</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource">跳過手動新增的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip" xml:space="preserve">跳過沒有標記「來源」的遊戲。Playnite預設不會對手動新增的遊戲標記來源
+若您為一個遊戲手動新增了來源，它就不會因為這個選項而被跳過同步</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRedeemEpic">將Epic的遊戲標記為「已領取」</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFaileds">過濾同步失敗的遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxFilterFailedsToolTip" xml:space="preserve">Playnite會在主畫面過濾出同步失敗的遊戲。這個選項不會套用至因收藏庫更新而產生的同步</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate">每當收藏庫更新後就自動開始同步</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip" xml:space="preserve">當收藏庫更新後，會嘗試對新增的遊戲進行同步
+這個同步會在背景處理，同步完成後會收到通知</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHider">同步多個商店的遊戲（DuplicateHider）</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncDuplicateHiderToolTip" xml:space="preserve">當你選擇一個遊戲進行同步，所有該遊戲的商店版本也會被同步，而不用特別去選取它們
+若您沒有安裝DuplicateHider插件，則這個選項的設置與否沒有任何影響</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden">同步隱藏的遊戲（只適用於「匯入所有遊戲」功能）</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncMainMenuImport">匯入所有遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncGameMenuImport">匯入至IsThereAnyDeal收藏庫</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageMultiple" xml:space="preserve">正在匯入{0}款遊戲至IsThereAnyDeal收藏庫...
+這應該只要花幾秒鐘...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMessageSingle" xml:space="preserve">正在匯入{0}至IsThereAnyDeal收藏庫...
+這應該只要花幾秒鐘...</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkipNoSource" xml:space="preserve">「{0}」為手動新增，在目前的設定下會被跳過同步。是否要將這次同步以例外處理強制執行？
+
+小技巧: 若不想再看到類似的訊息, 可以在插件設定中取消該選項。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedMultiple">成功匯入{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSucceedSingle">成功匯入{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureMultiple">無法匯入{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportFailureSingle">無法匯入{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedMultiple">跳過{0}款遊戲</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportSkippedSingle">跳過{0}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportMixed" xml:space="preserve">已處理{0}款遊戲
+成功：{1}
+跳過：{2}
+失敗：{3}</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorCaption">IsThereAnyDeal Collection Sync錯誤</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncErrorMessageNotLoggedIn"
+            xml:space="preserve">您尚未登入至IsThereAnyDeal
+
+是否要打開設定以進行登入？（登入後，您需要再重新一次加入遊戲）</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncNetworkError" xml:space="preserve">發生了連線問題。請確認您的網路連線是否正常：
+
+{0}
+
+請稍後再試。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncImportError" xml:space="preserve">同步時發生錯誤：
+
+{0}
+
+請稍後再試。</sys:String>
+    <sys:String x:Key="LOCIsThereAnyDealCollectionSyncAuthenticationError" xml:space="preserve">登入時發生錯誤：
+
+{0}
+        
+請稍後再試。</sys:String>
+</ResourceDictionary>

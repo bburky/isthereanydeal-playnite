@@ -4,7 +4,7 @@ Author: Blake Burkhart
 Version: 2.3
 Module: IsthereanydealCollectionSync.dll
 Type: GenericPlugin
-Icon: icon.svg
+Icon: Assets\icon.png
 Links:
     - Name: Source
       Url: https://github.com/bburky/isthereanydeal-playnite/

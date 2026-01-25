@@ -1,0 +1,58 @@
+using System;
+using System.Linq;
+using System.Windows.Controls;
+using System.Windows.Data;
+
+namespace IsthereanydealCollectionSync
+{
+    public partial class IsthereanydealCollectionSyncSettingsView : UserControl
+    {
+        public IsthereanydealCollectionSyncSettingsView()
+        {
+            InitializeComponent();
+        }
+    }
+
+    [ValueConversion(typeof(string), typeof(string[]))]
+    public class StringToStringArray : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is null || !(value is string[]))
+            {
+                return "";
+            }
+
+            return string.Join(",", (string[])value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is null || !(value is string))
+            {
+                return new string[0];
+            }
+
+            string text = (string)value;
+
+            return text.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToArray();
+        }
+    }
+
+    // https://stackoverflow.com/questions/397556/how-to-bind-radiobuttons-to-an-enum
+    // [ValueConversion(typeof(Any Enum), typeof(bool))]
+    public class ComparisonConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return value?.Equals(parameter);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return value?.Equals(true) == true ? parameter : Binding.DoNothing;
+        }
+    }
+}
