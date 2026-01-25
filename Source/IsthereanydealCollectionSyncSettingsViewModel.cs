@@ -19,6 +19,7 @@ namespace IsthereanydealCollectionSync
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly IsthereanydealCollectionSync plugin;
+
         public Settings editingClone { get; set; }
 
         private Settings settings;
@@ -58,8 +59,21 @@ namespace IsthereanydealCollectionSync
         {
             get => new RelayCommand<object>(async (a) =>
             {
-                plugin.ClearNotifications();
-                await plugin.client.Login();
+                try
+                {
+                    plugin.ClearNotifications();
+                    await plugin.client.Login();
+                }
+                catch (ITADException ex)
+                {
+                    logger.Error(ex, ex.Message);
+                    plugin.PlayniteApi.Dialogs.ShowErrorMessage(ex.Message, ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Unexpected error during login");
+                    plugin.PlayniteApi.Dialogs.ShowErrorMessage($"Unexpected error during login:\n{ex.Message}", ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
+                }
                 OnPropertyChanged(nameof(IsUserLoggedIn));
             });
         }
@@ -75,12 +89,12 @@ namespace IsthereanydealCollectionSync
                     }
                     else
                     {
-                        logger.Error("Failed to open url.");
+                        throw new Exception($"URL for NavigateUrlCommand is not of type Uri: {obj}");
                     }
                 }
-                catch (Exception e) when (!Debugger.IsAttached)
+                catch (Exception e)
                 {
-                    logger.Error(e, "Failed to open url.");
+                    logger.Error(e, "NavigateUrlCommand Failed to open url.");
                 }
             });
         }

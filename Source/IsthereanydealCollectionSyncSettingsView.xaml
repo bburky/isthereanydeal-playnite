@@ -63,12 +63,13 @@
         </StackPanel>
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSource}" IsChecked="{Binding Settings.SkipNoSource}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSkipNoSourceToolTip}" />
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate}" IsChecked="{Binding Settings.AutoRunOnLibraryUpdate}" ToolTip="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdateToolTip}" />
+        <!-- TODO: maybe note in LOCIsThereAnyDealCollectionSyncCheckBoxRunOnLibraryUpdate that this runs on startup too -->
         <CheckBox Content="{DynamicResource LOCIsThereAnyDealCollectionSyncCheckBoxSyncHidden}" IsChecked="{Binding Settings.SyncHidden}" />
         <TextBlock TextWrapping="Wrap">
-                <Run Text="Note, this extension always REPLACES the list of synced games in the IsThereAnyDeal Collection Profile. Games removed (or excluded with above options) will be removed from your ITAD collection. Games manually added to ITAD collections or synced directly from Steam to ITAD will not be affected." />
+                <Run Text="Note, on each sync this extension REPLACES the list of previously synced games in the IsThereAnyDeal collection profile. Games removed (or excluded with above options) will be removed from your ITAD collection. Games manually added to ITAD collections or synced directly from Steam to ITAD will not be affected." />
                 <LineBreak/>
                 <LineBreak/>
-                <Run Text="TODO: support configurable accountId to let people have a profile per Playnite installation on different computers." />
+                <Run Text="TODO: support configurable accountId to let people have a profile per Playnite installation on different computers. Unsure if this should be a text field, or a toggle setting and we just generate and persist a GUID" />
                 <LineBreak/>
                 <LineBreak/>
                 <Run Text="TODO: clean up and localize this text."/>

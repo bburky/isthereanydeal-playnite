@@ -23,8 +23,9 @@ namespace IsthereanydealCollectionSync
     {
         private const string CLIENT_ID = "5590176f3ebbc4d1";
         private const string SCOPE = "profiles coll_write";
+        // Using a # URL fragment causes the final redirect to go to #login_complete?code=... (the query is inside the fragment), this prevents the code from going back to the server, which we don't actually need
+        // #login_complete is also a nice sentinel to detect when login is complete
         private const string REDIRECT_URI = "https://isthereanydeal.com/#login_complete";
-
         private readonly string tokensPath;
         private readonly ILogger logger;
         private readonly Plugin plugin;
@@ -48,11 +49,9 @@ namespace IsthereanydealCollectionSync
                 }
             } catch (Exception ex)
             {
-                logger.Error(ex, "Failed to delete existing tokens file");
-                plugin.PlayniteApi.Dialogs.ShowErrorMessage("Failed to delete existing tokens file, see log");
+                throw new ITADException("Failed to delete old tokens file on login", ex);
             }
 
-            // #login_complete
             var loginUrl = $"https://isthereanydeal.com/oauth/authorize/?client_id={CLIENT_ID}&response_type=code&code_challenge_method=S256&code_challenge={pkce.codeChallenge}&state={pkce.state}&scope={SCOPE}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}";
             var brokenPostSteamLoginUrl = $"https://isthereanydeal.com/oauth/authorize/?client_id={CLIENT_ID}";
             var callbackUrl = String.Empty;
@@ -64,10 +63,11 @@ namespace IsthereanydealCollectionSync
 
                     if (url.Equals(brokenPostSteamLoginUrl))
                     {
-                        // Work around this ITAD error, when returning from a redirect back to ITAD from Steam login:
-                        //   App Authorization Error
-                        //   The authorization grant type is not supported by the authorization server. (Check that all required parameters have been provided)
-                        // We just retry the login, which will work now that ITAD cookies are set after login.
+                        // Workaround this ITAD error, when returning from a redirect back to ITAD from Steam login:
+                        // > App Authorization Error
+                        // > The authorization grant type is not supported by the authorization server. (Check that all required parameters have been provided)
+                        // It seems ITAD is sending an incomplete redirect URL to Steam(?) causing Steam to redirect back to ITAD with missing parameters.
+                        // As a workaround, we just retry the login, which will work now that ITAD cookies are set after Steam login.
                         webView.Navigate(loginUrl);
                     }
 
@@ -87,15 +87,14 @@ namespace IsthereanydealCollectionSync
                 try
                 {
                     var uri = new Uri(callbackUrl);
-                    var fragement = uri.Fragment;
-                    var query = fragement.Substring(fragement.IndexOf("?") + 1);
+                    // Query is inside the URL fragment because we used a # redirect URI
+                    var query = uri.Fragment.Substring(uri.Fragment.IndexOf("?") + 1);
                     var queryParams = HttpUtility.ParseQueryString(query);
                     await Authenticate(queryParams.Get("state"), queryParams.Get("code"), pkce);
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "Failed to authenticate");
-                    plugin.PlayniteApi.Dialogs.ShowErrorMessage("Failed to authenticate, see log");
+                    throw new ITADException("Failed to authenticate", ex);
                 }
             }
         }
@@ -106,7 +105,7 @@ namespace IsthereanydealCollectionSync
             {
                 if (state != pkce.state)
                 {
-                    throw new SyncException("Failed to authenticate (state mismatch)");
+                    throw new ITADException("Failed to authenticate (state mismatch)");
                 }
 
                 var parameters = new Dictionary<string, string>
@@ -122,7 +121,7 @@ namespace IsthereanydealCollectionSync
                 tokenResponse.EnsureSuccessStatusCode();
                 var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
                 var authData = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though)
+                // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though, which works fine but is inefficent)
                 if (authData.refresh_token != null)
                 {
                     // TODO: maybe encrypt like the official extensions do
@@ -153,10 +152,10 @@ namespace IsthereanydealCollectionSync
                     tokenResponse.EnsureSuccessStatusCode();
                     var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
                     var authData = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                    // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though)
+                    // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though, which works fine but is inefficent)
                     if (authData.refresh_token == null)
                     {
-                        throw new SyncException("Received invalid token");
+                        throw new ITADException("Received invalid token");
                     }
                     // TODO: maybe encrypt like the official extensions do
                     using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
@@ -169,7 +168,7 @@ namespace IsthereanydealCollectionSync
             }
             catch (Exception ex)
             {
-                throw new SyncException("Login expired, please re-login", ex);
+                throw new ITADException("Login expired, please re-login", ex);
             }
         }
 
@@ -191,14 +190,14 @@ namespace IsthereanydealCollectionSync
                     // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though)
                     if (string.IsNullOrEmpty(profilesLinkResponse.token))
                     {
-                        throw new SyncException("Received invalid profile token");
+                        throw new ITADException("Received invalid profile token");
                     }
                     return profilesLinkResponse;
                 }
             }
             catch (Exception ex)
             {
-                throw new SyncException("Failed to link profile", ex);
+                throw new ITADException("Failed to link profile", ex);
             }
         }
 
@@ -216,7 +215,7 @@ namespace IsthereanydealCollectionSync
                 // As a fallback, use the Playnite database ID
                 string id = $"playnite/{game.Id}";
                 // Try to include the PluginId and GameId (e.g. steam appid) to create unique IDs per duplicate copy
-                // We could use the Source GUID, but this is actualy a user-visible string in ITAD so better to use the more friendly Source.Name
+                // We could use the Source plugin GUID, but this is actualy a user-visible string in ITAD so better to use the more friendly Source.Name
                 if (!string.IsNullOrEmpty(game.Source?.Name) && !string.IsNullOrEmpty(game.GameId))
                 {
                     id = $"{game.Source?.Name}/{game.GameId}";
@@ -232,8 +231,8 @@ namespace IsthereanydealCollectionSync
                 });
 
                 // Notes:
-                // * ITAD will mostly try on its own to merge duplicates, by name I think. (perhaps we can provide a better ID)
-                // * ITAD's title lookup can do weird things: "New Game" becomes "Plumber Survivors" (yes, really)
+                // * ITAD will mostly try on its own to merge duplicates, by title I think. (TODO: perhaps we can provide the steam appid/etc in way that ITAD can use it though)
+                // * ITAD's title lookup can sometimes do weird things: "New Game" becomes "Plumber Survivors" (yes, really)
             }
 
             using (var client = new HttpClient())
@@ -256,7 +255,7 @@ namespace IsthereanydealCollectionSync
                 }
                 catch (Exception ex)
                 {
-                    throw new SyncException("Failed to sync collection", ex);
+                    throw new ITADException("Failed to sync collection", ex);
                 }
             }
         }
@@ -273,12 +272,12 @@ namespace IsthereanydealCollectionSync
                 var oauthToken = Serialization.FromJson<OauthToken>(tokenContent);
                 if (oauthToken?.refresh_token == null)
                 {
-                    throw new SyncException("Invalid token file");
+                    throw new ITADException("Invalid token file");
                 }
                 return oauthToken;
             } catch (Exception ex)
             {
-                throw new SyncException("User not logged in", ex);
+                throw new ITADException("User not logged in", ex);
             }
         }
         public async Task<bool> GetIsUserLoggedIn()
@@ -300,7 +299,6 @@ namespace IsthereanydealCollectionSync
     internal class Pkce
     {
         internal static RandomNumberGenerator Rng { get; } = RandomNumberGenerator.Create();
-
         internal readonly string codeVerifier;
         internal readonly string codeChallenge;
         internal readonly string state;

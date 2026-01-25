@@ -60,7 +60,6 @@
     <Compile Include="Models\OauthToken.cs" />
     <Compile Include="Models\ProfilesLink.cs" />
     <Compile Include="Models\ProfilesSyncCollection.cs" />
-    <Compile Include="Models\SyncException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
