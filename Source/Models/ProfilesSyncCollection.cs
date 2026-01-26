@@ -1,9 +1,4 @@
 ﻿using Playnite.SDK.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IsthereanydealCollectionSync.Models
 {
@@ -23,21 +18,24 @@ namespace IsthereanydealCollectionSync.Models
         public int removed;
     }
 
-    // The number is shopId which was gotten from https://api.isthereanydeal.com/service/shops/v1
-    // It should be 0 for library that cannot be mapped
-    // to ITAD shop.
+    // The number is shopId from https://api.isthereanydeal.com/service/shops/v1
+    // ITAD has some old shops that are no longer documented but still work, these are included too
+    // 0 is used for games that cannot be mapped to an ITAD shop, but this value will cause an error if used in the ITAD API
     public enum ItadShop
     {
+        Amazon = 3, // Missing from API docs, discovered from old IATD collection JSON backup
         Blizzard = 4,
         Ea = 52,
+        //Discord = 12, // Missing from API docs, Discord Store is defunct now, so not including it.
         Epic = 16,
         Gog = 35,
         HumbleBundle = 18,
         Indiegala = 42,
+        Itch = 44, // Missing from API docs, discovered from old IATD collection JSON backup
         Steam = 61,
         Ubisoft = 62,
         MicrosoftStore = 48,
-        Unknown = 0, // Not supported by ITAD, will error if used in API
+        Unknown = 0, // Not supported by ITAD, this value will cause an error if used in API
     }
 
     public class ItadShopExtension
@@ -51,6 +49,22 @@ namespace IsthereanydealCollectionSync.Models
         {
             switch (source?.Name)
             {
+                // This list is intended to include all known Source values used by Playnite addons.
+                // Currently includes all known current and pervious values from the official PlayniteExtensions repository.
+                // Adding additional Sources from unofficial addons is welcome.
+
+                case "Amazon":
+                    return ItadShop.Amazon;
+                case "Bethesda":
+                    // Bethesda plugin was removed from Playnite, not in ITAD shop API
+                    return ItadShop.Unknown;
+                case "Discord":
+                    return ItadShop.Unknown; // we could return 12 but the store is defunct anyway
+                case "itch.io":
+                    return ItadShop.Itch;
+                case "Legacy Games":
+                    // Not supported by ITAD shop API
+                    return ItadShop.Unknown;
                 case "Battle.net":
                     return ItadShop.Blizzard;
                 case "EA app":
@@ -63,9 +77,24 @@ namespace IsthereanydealCollectionSync.Models
                     return ItadShop.HumbleBundle;
                 case "Indiegala":
                     return ItadShop.Indiegala;
+                case "Origin":
+                    // EA app is the new name but old libraries may still have "Origin" as source
+                    return ItadShop.Ea;
+                case "PlayStation":
+                     // PlayStation plugin was removed from Playnite, not in ITAD shop API
+                    return ItadShop.Unknown;
+                case "Rockstar Games":
+                    // Rockstar Games is not supported by ITAD shop API
+                    return ItadShop.Unknown;
                 case "Steam":
                     return ItadShop.Steam;
+                case "Twitch":
+                    // Amazon is the new name but old libraries may still have "Twitch" as source
+                    return ItadShop.Amazon;
                 case "Ubisoft Connect":
+                    return ItadShop.Ubisoft;
+                case "Uplay":
+                    // Ubisoft Connect is the new name but old libraries may still have "Uplay" as source
                     return ItadShop.Ubisoft;
                 case "Xbox":
                     return ItadShop.MicrosoftStore;
