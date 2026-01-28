@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -29,6 +30,7 @@ namespace IsthereanydealCollectionSync
         private readonly string tokensPath;
         private readonly ILogger logger;
         private readonly Plugin plugin;
+        private OauthToken token;
 
         public IsthereanydealClient(Plugin plugin, ILogger logger)
         {
@@ -120,9 +122,8 @@ namespace IsthereanydealCollectionSync
                 HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
                 tokenResponse.EnsureSuccessStatusCode();
                 var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
-                var authData = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though, which works fine but is inefficent)
-                if (authData.refresh_token != null)
+                token = Serialization.FromJson<OauthToken>(tokenResponseContent);
+                if (token.refresh_token != null)
                 {
                     // TODO: maybe encrypt like the official extensions do
                     using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
@@ -134,35 +135,30 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private async Task<OauthToken> RefreshTokens(OauthToken token)
+        private async Task RefreshTokens(HttpClient client)
         {
             try
             {
-                using (var client = new HttpClient())
-                {
-                    var parameters = new Dictionary<string, string>
+                var parameters = new Dictionary<string, string>
                     {
                         { "grant_type", "refresh_token" },
                         { "client_id", CLIENT_ID },
                         { "refresh_token", token.refresh_token },
                     };
-                    var content = new FormUrlEncodedContent(parameters);
-                    HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
-                    tokenResponse.EnsureSuccessStatusCode();
-                    var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
-                    var authData = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                    // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though, which works fine but is inefficent)
-                    if (authData.refresh_token == null)
-                    {
-                        throw new ITADException("Received invalid token");
-                    }
-                    // TODO: maybe encrypt like the official extensions do
-                    using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-                    {
-                        byte[] data = Encoding.UTF8.GetBytes(tokenResponseContent);
-                        await fileStream.WriteAsync(data, 0, data.Length);
-                        return authData;
-                    }
+                var content = new FormUrlEncodedContent(parameters);
+                HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
+                tokenResponse.EnsureSuccessStatusCode();
+                var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
+                token = Serialization.FromJson<OauthToken>(tokenResponseContent);
+                if (token.refresh_token == null)
+                {
+                    throw new ITADException("Received invalid token");
+                }
+                // TODO: maybe encrypt like the official extensions do
+                using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                {
+                    byte[] data = Encoding.UTF8.GetBytes(tokenResponseContent);
+                    await fileStream.WriteAsync(data, 0, data.Length);
                 }
             }
             catch (Exception ex)
@@ -171,28 +167,24 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private async Task<ProfilesLinkResponse> LinkProfile(OauthToken token)
+        private async Task<ProfilesLinkResponse> LinkProfile(HttpClient client)
         {
             try
             {
-                using (var client = new HttpClient())
+                // NOTE: Using a constant accountId, even though the docs suggest it should be unique per user, this _seems_ to work ok
+                // TODO: However, the extension probably should let people optionally configure the accountId in case they have multiple Playnite installs on different computers syncing to ITAD?
+                // TODO probably move this to ProfilesSyncCollection as a class
+                var response = await Send<ProfilesLinkResponse>(
+                    client,
+                    HttpMethod.Put,
+                    new StringContent("{\"accountId\": \"playnite\", \"accountName\": \"Playnite\" }"),
+                    "https://api.isthereanydeal.com/profiles/link/v1");
+
+                if (string.IsNullOrEmpty(response?.token))
                 {
-                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.access_token);
-                    // NOTE: Using a constant accountId, even though the docs suggest it should be unique per user, this _seems_ to work ok
-                    // TODO: However, the extension probably should let people optionally configure the accountId in case they have multiple Playnite installs on different computers syncing to ITAD?
-                    // TODO probably move this to ProfilesSyncCollection as a class
-                    var body = new StringContent("{\"accountId\": \"playnite\", \"accountName\": \"Playnite\" }");
-                    HttpResponseMessage response = await client.PutAsync("https://api.isthereanydeal.com/profiles/link/v1", body);
-                    response.EnsureSuccessStatusCode();
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var profilesLinkResponse = Serialization.FromJson<ProfilesLinkResponse>(responseContent);
-                    // TODO: Store timestamp to check against expiration? (right now we just always refresh the token anyway though)
-                    if (string.IsNullOrEmpty(profilesLinkResponse.token))
-                    {
-                        throw new ITADException("Received invalid profile token");
-                    }
-                    return profilesLinkResponse;
+                    throw new ITADException("Received invalid profile token");
                 }
+                return response;
             }
             catch (Exception ex)
             {
@@ -236,21 +228,21 @@ namespace IsthereanydealCollectionSync
 
             using (var client = new HttpClient())
             {
-                var oauthToken = await getToken();
-                var refreshedOauthToken = await RefreshTokens(oauthToken);
-                var profileToken = await LinkProfile(refreshedOauthToken);
+                token = await getToken();
+                var profileToken = await LinkProfile(client);
 
                 try
                 {
-                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", refreshedOauthToken.access_token);
                     client.DefaultRequestHeaders.Add("ITAD-Profile", profileToken.token);
                     var bodyContent = Serialization.ToJson(gamesRequest);
                     var body = new StringContent(bodyContent, Encoding.UTF8, "application/json");
-                    HttpResponseMessage response = await client.PutAsync("https://api.isthereanydeal.com/profiles/sync/collection/v1", body);
-                    response.EnsureSuccessStatusCode();
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var profilesSyncCollectionResponse = Serialization.FromJson<ProfilesSyncCollectionResponse>(responseContent);
-                    return profilesSyncCollectionResponse;
+                    var response = await Send< ProfilesSyncCollectionResponse>(
+                        client,
+                        HttpMethod.Put,
+                        body,
+                        "https://api.isthereanydeal.com/profiles/sync/collection/v1");
+
+                    return response;
                 }
                 catch (Exception ex)
                 {
@@ -283,15 +275,60 @@ namespace IsthereanydealCollectionSync
         {
             try
             {
-                var oauthToken = await getToken();
-                var refreshedOauthToken = await RefreshTokens(oauthToken);
-                return refreshedOauthToken != null;
+                using (var client = new HttpClient())
+                {
+                    token = await getToken();
+                    await RefreshTokens(client);
+                    return token != null;
+                }
             }
             catch (Exception ex)
             {
                 logger.Warn(ex, "Error checking GetIsUserLoggedIn");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Send a request with bearer authentication. It will
+        /// refresh the tokens and send again if the initial
+        /// response is "Unauthorized" (401). You do not need
+        /// to set Authorization header before calling.
+        /// </summary>
+        /// <typeparam name="Response">The datatype of this request's response that will be deserialized into</typeparam>
+        /// <param name="client">Required: Client to send request</param>
+        /// <param name="method">Required: Request method</param>
+        /// <param name="content">Nullable: Request body</param>
+        /// <param name="uri">Required: Request URI</param>
+        /// <returns>Response from <paramref name="uri"/>.</returns>
+        private async Task<Response> Send<Response>(
+            HttpClient client, // required
+            HttpMethod method, // required
+            HttpContent content, // nullable
+            string uri) // required
+        where Response: class
+        {
+            var msg = new HttpRequestMessage(method, uri)
+            {
+                Content = content
+            };
+
+            msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.access_token);
+            var response = await client.SendAsync(msg);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await RefreshTokens(client);
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.access_token);
+                msg = new HttpRequestMessage(method, uri)
+                {
+                    Content = content
+                };
+                response = await client.SendAsync(msg);
+            }
+
+            response.EnsureSuccessStatusCode();
+            return Serialization.FromJsonStream<Response>(await response.Content.ReadAsStreamAsync());
         }
     }
 
