@@ -23,19 +23,19 @@ namespace IsthereanydealCollectionSync.Models
     // 0 is used for games that cannot be mapped to an ITAD shop, but this value will cause an error if used in the ITAD API
     public enum ItadShop
     {
+        Unknown = 0, // Not supported by ITAD, this value will cause an error if used in API
         Amazon = 3, // Missing from API docs, discovered from old IATD collection JSON backup
         Blizzard = 4,
         Ea = 52,
-        //Discord = 12, // Missing from API docs, Discord Store is defunct now, so not including it.
+        Discord = 12, // Missing from API docs, Discord Store is defunct now, so not including it.
         Epic = 16,
         Gog = 35,
-        HumbleBundle = 18,
+        HumbleBundle = 37,
         Indiegala = 42,
         Itch = 44, // Missing from API docs, discovered from old IATD collection JSON backup
+        MicrosoftStore = 48,
         Steam = 61,
         Ubisoft = 62,
-        MicrosoftStore = 48,
-        Unknown = 0, // Not supported by ITAD, this value will cause an error if used in API
     }
 
     public class ItadShopExtension
