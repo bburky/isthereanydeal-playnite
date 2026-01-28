@@ -145,7 +145,6 @@ namespace IsthereanydealCollectionSync
                         { "grant_type", "refresh_token" },
                         { "client_id", CLIENT_ID },
                         { "refresh_token", token.refresh_token },
-                        { "scope", SCOPE },
                     };
                     var content = new FormUrlEncodedContent(parameters);
                     HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
