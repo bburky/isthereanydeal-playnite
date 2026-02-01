@@ -37,22 +37,26 @@ namespace IsthereanydealCollectionSync
             this.plugin = plugin;
             this.logger = logger;
             tokensPath = Path.Combine(plugin.GetPluginUserDataPath(), "tokens.json");
+            // token is left uninitialized here, mostly because loading it may throw errors which are better handled elsewhere
         }
 
         public async Task Login()
         {
             var pkce = new Pkce();
 
+            // Logout any existing session by deleting old tokens
             try
             {
                 if (File.Exists(tokensPath))
                 {
                     File.Delete(tokensPath);
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new ITADException("Failed to delete old tokens file on login", ex);
             }
+            token = null;
 
             var loginUrl = $"https://isthereanydeal.com/oauth/authorize/?client_id={CLIENT_ID}&response_type=code&code_challenge_method=S256&code_challenge={pkce.codeChallenge}&state={pkce.state}&scope={SCOPE}&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}";
             var brokenPostSteamLoginUrl = $"https://isthereanydeal.com/oauth/authorize/?client_id={CLIENT_ID}";
@@ -79,7 +83,7 @@ namespace IsthereanydealCollectionSync
                         webView.Close();
                     }
                 };
-                webView.DeleteDomainCookies("isthereanydeal.com");
+                webView.DeleteDomainCookies("isthereanydeal.com");  // Logout inside webview by deleting cookies
                 webView.Navigate(loginUrl);
                 webView.OpenDialog();
             }
@@ -92,7 +96,7 @@ namespace IsthereanydealCollectionSync
                     // Query is inside the URL fragment because we used a # redirect URI
                     var query = uri.Fragment.Substring(uri.Fragment.IndexOf("?") + 1);
                     var queryParams = HttpUtility.ParseQueryString(query);
-                    await Authenticate(queryParams.Get("state"), queryParams.Get("code"), pkce);
+                    token = await Authenticate(queryParams.Get("state"), queryParams.Get("code"), pkce);
                 }
                 catch (Exception ex)
                 {
@@ -101,7 +105,7 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private async Task Authenticate(string state, string code, Pkce pkce)
+        private async Task<OauthToken> Authenticate(string state, string code, Pkce pkce)
         {
             using (var client = new HttpClient())
             {
@@ -122,20 +126,22 @@ namespace IsthereanydealCollectionSync
                 HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
                 tokenResponse.EnsureSuccessStatusCode();
                 var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
-                token = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                if (token.refresh_token != null)
+                var newToken = Serialization.FromJson<OauthToken>(tokenResponseContent);
+                if (newToken.refresh_token == null)
                 {
-                    // TODO: maybe encrypt like the official extensions do
-                    using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-                    {
-                        byte[] data = Encoding.UTF8.GetBytes(tokenResponseContent);
-                        await fileStream.WriteAsync(data, 0, data.Length);
-                    }
+                    throw new ITADException("Received invalid token");
                 }
+                // TODO: maybe encrypt like the official extensions do
+                using (FileStream fileStream = new FileStream(tokensPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                {
+                    byte[] data = Encoding.UTF8.GetBytes(tokenResponseContent);
+                    await fileStream.WriteAsync(data, 0, data.Length);
+                }
+                return newToken;
             }
         }
 
-        private async Task RefreshTokens(HttpClient client)
+        private async Task<OauthToken> RefreshTokens(HttpClient client)
         {
             try
             {
@@ -149,8 +155,8 @@ namespace IsthereanydealCollectionSync
                 HttpResponseMessage tokenResponse = await client.PostAsync("https://isthereanydeal.com/oauth/token/", content);
                 tokenResponse.EnsureSuccessStatusCode();
                 var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
-                token = Serialization.FromJson<OauthToken>(tokenResponseContent);
-                if (token.refresh_token == null)
+                var newToken = Serialization.FromJson<OauthToken>(tokenResponseContent);
+                if (newToken.refresh_token == null)
                 {
                     throw new ITADException("Received invalid token");
                 }
@@ -160,6 +166,8 @@ namespace IsthereanydealCollectionSync
                     byte[] data = Encoding.UTF8.GetBytes(tokenResponseContent);
                     await fileStream.WriteAsync(data, 0, data.Length);
                 }
+
+                return newToken;
             }
             catch (Exception ex)
             {
@@ -228,7 +236,7 @@ namespace IsthereanydealCollectionSync
 
             using (var client = new HttpClient())
             {
-                token = await getToken();
+                token = await loadSavedToken();
                 var profileToken = await LinkProfile(client);
 
                 try
@@ -236,7 +244,7 @@ namespace IsthereanydealCollectionSync
                     client.DefaultRequestHeaders.Add("ITAD-Profile", profileToken.token);
                     var bodyContent = Serialization.ToJson(gamesRequest);
                     var body = new StringContent(bodyContent, Encoding.UTF8, "application/json");
-                    var response = await Send< ProfilesSyncCollectionResponse>(
+                    var response = await Send<ProfilesSyncCollectionResponse>(
                         client,
                         HttpMethod.Put,
                         body,
@@ -251,7 +259,7 @@ namespace IsthereanydealCollectionSync
             }
         }
 
-        private async Task<OauthToken> getToken()
+        private async Task<OauthToken> loadSavedToken()
         {
             try
             {
@@ -266,7 +274,8 @@ namespace IsthereanydealCollectionSync
                     throw new ITADException("Invalid token file");
                 }
                 return oauthToken;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new ITADException("User not logged in", ex);
             }
@@ -277,8 +286,8 @@ namespace IsthereanydealCollectionSync
             {
                 using (var client = new HttpClient())
                 {
-                    token = await getToken();
-                    await RefreshTokens(client);
+                    token = await loadSavedToken();
+                    token = await RefreshTokens(client);
                     return token != null;
                 }
             }
@@ -306,8 +315,13 @@ namespace IsthereanydealCollectionSync
             HttpMethod method, // required
             HttpContent content, // nullable
             string uri) // required
-        where Response: class
+        where Response : class
         {
+            if (token?.access_token == null)
+            {
+                throw new ITADException("User not logged in");
+            }
+
             var msg = new HttpRequestMessage(method, uri)
             {
                 Content = content
@@ -318,7 +332,7 @@ namespace IsthereanydealCollectionSync
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                await RefreshTokens(client);
+                token = await RefreshTokens(client);
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.access_token);
                 msg = new HttpRequestMessage(method, uri)
                 {
