@@ -5,14 +5,8 @@ using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.UI.WebControls;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 
 namespace IsthereanydealCollectionSync
 {
@@ -81,9 +75,11 @@ namespace IsthereanydealCollectionSync
                 return;
             }
 
+
+            ProfilesSyncCollectionResponse result = null;
             try
             {
-                var result = await client.ProfilesSyncCollection(games);
+                result = await client.ProfilesSyncCollection(games);
             }
             catch (ITADException ex)
             {
@@ -108,9 +104,13 @@ namespace IsthereanydealCollectionSync
                 PlayniteApi.Dialogs.ShowErrorMessage($"Unexpected error during ITAD collection sync:\n{ex.Message}", ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
             }
 
-            // TODO: if foreground, show success dialog with info from server.
-            // probably no notification at all for background success?
+            if (!background)
+            {
+                // TODO: localize
+                PlayniteApi.Dialogs.ShowMessage($"IsThereAnyDeal profile synced successfully\n\n{result?.total} total games synced\n{result?.added} new games added\n{result?.removed} games removed", ResourceProvider.GetString("LOCIsThereAnyDealCollectionSync"));
+            }
         }
+
         internal void ClearNotifications()
         {
             // Playnite doesn't care if we delete a non-existing notification
